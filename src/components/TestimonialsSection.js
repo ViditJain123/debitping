@@ -12,14 +12,14 @@ export default function TestimonialsSection() {
   const testimonials = [
     {
       id: 1,
-      text: "Chasing clients for payments used to be awkward. DebtPing makes it effortless and has improved my cash flow dramatically.",
+      text: "Chasing clients for payments used to be awkward. DebitPing makes it effortless and has improved my cash flow dramatically.",
       name: "Rajiv M.",
       role: "Freelance Developer",
       avatar: "/avatars/avatar-1.png"
     },
     {
       id: 2,
-      text: "I've reduced payment delays by 60% since using DebtPing. The automatic WhatsApp reminders are professional and get results.",
+      text: "I've reduced payment delays by 60% since using DebitPing. The automatic WhatsApp reminders are professional and get results.",
       name: "Priya S.",
       role: "Agency Owner",
       avatar: "/avatars/avatar-2.png"

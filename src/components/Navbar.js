@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { FiMenu, FiX, FiMoon, FiSun } from 'react-icons/fi';
 import { FaWhatsapp } from 'react-icons/fa';
+import { SignInButton, SignUpButton, UserButton, SignedIn, SignedOut } from '@clerk/nextjs';
 
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -69,19 +70,23 @@ export default function Navbar() {
           
           {/* Right side buttons */}
           <div className="hidden md:flex items-center space-x-4">
-            <Link 
-              href="#contact" 
-              className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white border border-gray-300 dark:border-gray-700 rounded-md transition-colors"
-            >
-              Login
-            </Link>
+            <SignedOut>
+              <SignInButton mode="modal">
+                <button className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white border border-gray-300 dark:border-gray-700 rounded-md transition-colors">
+                  Login
+                </button>
+              </SignInButton>
+              
+              <SignUpButton mode="modal">
+                <button className="px-4 py-2 text-sm font-medium text-white gradient-bg rounded-md shadow-md hover:shadow-lg transition-shadow">
+                  Get Started
+                </button>
+              </SignUpButton>
+            </SignedOut>
             
-            <Link 
-              href="#contact" 
-              className="px-4 py-2 text-sm font-medium text-white gradient-bg rounded-md shadow-md hover:shadow-lg transition-shadow"
-            >
-              Get Started
-            </Link>
+            <SignedIn>
+              <UserButton afterSignOutUrl="/" />
+            </SignedIn>
           </div>
           
           {/* Mobile menu button */}
@@ -121,13 +126,33 @@ export default function Navbar() {
                 {link.name}
               </Link>
             ))}
-            <Link
-              href="#contact"
-              className="block w-full text-center px-3 py-2 mt-4 text-base font-medium text-white gradient-bg rounded-md shadow-md hover:shadow-lg"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Get Started
-            </Link>
+            <SignedOut>
+              <div className="mt-4 space-y-2">
+                <SignInButton mode="modal">
+                  <button
+                    className="block w-full text-center px-3 py-2 text-base font-medium text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white border border-gray-300 dark:border-gray-700 rounded-md transition-colors"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Login
+                  </button>
+                </SignInButton>
+                
+                <SignUpButton mode="modal">
+                  <button
+                    className="block w-full text-center px-3 py-2 text-base font-medium text-white gradient-bg rounded-md shadow-md hover:shadow-lg"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Get Started
+                  </button>
+                </SignUpButton>
+              </div>
+            </SignedOut>
+            
+            <SignedIn>
+              <div className="mt-4 flex justify-center">
+                <UserButton afterSignOutUrl="/" />
+              </div>
+            </SignedIn>
           </div>
         </motion.div>
       )}

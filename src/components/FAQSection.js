@@ -10,11 +10,11 @@ export default function FAQSection() {
   const faqs = [
     {
       question: "Is WhatsApp messaging legal for payments?",
-      answer: "Yes, sending payment reminders through WhatsApp is legal as long as you comply with WhatsApp Business policies and get proper consent from your customers. DebtPing ensures all communications follow best practices and regulations."
+      answer: "Yes, sending payment reminders through WhatsApp is legal as long as you comply with WhatsApp Business policies and get proper consent from your customers. DebitPing ensures all communications follow best practices and regulations."
     },
     {
       question: "Will customers get spammed?",
-      answer: "No, DebtPing allows you to set reasonable reminder frequencies and customize messaging schedules. Customers will only receive relevant, professional payment reminders based on your settings."
+      answer: "No, DebitPing allows you to set reasonable reminder frequencies and customize messaging schedules. Customers will only receive relevant, professional payment reminders based on your settings."
     },
     {
       question: "Can I personalize messages?",
@@ -30,7 +30,7 @@ export default function FAQSection() {
     },
     {
       question: "Do I need coding knowledge?",
-      answer: "Not at all! DebtPing is designed to be user-friendly with an intuitive dashboard. You can set up your account, integrate your accounting tools, and start sending reminders within minutes without any technical expertise."
+      answer: "Not at all! DebitPing is designed to be user-friendly with an intuitive dashboard. You can set up your account, integrate your accounting tools, and start sending reminders within minutes without any technical expertise."
     }
   ];
   
@@ -52,7 +52,7 @@ export default function FAQSection() {
             Frequently Asked <span className="gradient-text">Questions</span>
           </h2>
           <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-            Everything you need to know about DebtPing
+            Everything you need to know about DebitPing
           </p>
         </motion.div>
         

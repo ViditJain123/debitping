@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { FaBolt } from 'react-icons/fa';
+import { SignedIn, SignedOut, SignUpButton } from '@clerk/nextjs';
 
 export default function HeroSection() {
   return (
@@ -18,7 +19,7 @@ export default function HeroSection() {
           >
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
               Never Chase Payments <span className="gradient-text">Again    </span> <br />
-              Automate It with DebtPing
+              Automate It with DebitPing
             </h1>
             
             <p className="text-lg md:text-xl text-gray-600 dark:text-gray-300 max-w-lg">
@@ -26,12 +27,24 @@ export default function HeroSection() {
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 pt-4">
-              <Link
-                href="#contact"
-                className="px-6 py-3 text-center text-white font-medium rounded-2xl gradient-bg shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1"
-              >
-                Get Started
-              </Link>
+              <SignedOut>
+                <SignUpButton mode="modal">
+                  <button
+                    className="px-6 py-3 text-center text-white font-medium rounded-2xl gradient-bg shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1"
+                  >
+                    Get Started
+                  </button>
+                </SignUpButton>
+              </SignedOut>
+              
+              <SignedIn>
+                <Link
+                  href="/dashboard"
+                  className="px-6 py-3 text-center text-white font-medium rounded-2xl gradient-bg shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1"
+                >
+                  Go to Dashboard
+                </Link>
+              </SignedIn>
               
               <Link
                 href="#demo"
@@ -66,7 +79,7 @@ export default function HeroSection() {
                     <span className="font-bold">DP</span>
                   </div>
                   <div>
-                    <p className="font-medium">DebtPing Assistant</p>
+                    <p className="font-medium">DebitPing Assistant</p>
                     <p className="text-xs opacity-80">Online</p>
                   </div>
                 </div>

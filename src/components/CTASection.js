@@ -46,7 +46,7 @@ export default function CTASection() {
                   Get Early Access Before We Launch
                 </h2>
                 <p className="text-white/90 text-lg md:text-xl max-w-2xl mx-auto">
-                  Be among the first to revolutionize your payment collection process with DebtPing.
+                  Be among the first to revolutionize your payment collection process with DebitPing.
                 </p>
               </div>
               

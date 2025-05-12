@@ -57,7 +57,7 @@ export default function DemoSection() {
                   <span className="font-bold">DP</span>
                 </div>
                 <div>
-                  <p className="font-medium">DebtPing Assistant</p>
+                  <p className="font-medium">DebitPing Assistant</p>
                   <p className="text-xs opacity-80">Online</p>
                 </div>
               </div>
@@ -69,7 +69,7 @@ export default function DemoSection() {
                   Today
                 </div>
                 
-                {/* Message from DebtPing */}
+                {/* Message from DebitPing */}
                 <div className="self-start max-w-[80%] bg-white rounded-lg p-3 shadow">
                   <p className="text-sm text-black">
                     {templates[activeTemplate].message}

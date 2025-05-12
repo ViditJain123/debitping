@@ -39,8 +39,8 @@ export default async function DashboardPage() {
                   </Link>
                 </li>
                 <li>
-                  <Link href="/dashboard/contacts" className="flex items-center px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md">
-                    <FaUserPlus className="mr-3" /> Contacts
+                  <Link href="/dashboard/dealers" className="flex items-center px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md">
+                    <FaUserPlus className="mr-3" /> Dealers
                   </Link>
                 </li>
               </ul>

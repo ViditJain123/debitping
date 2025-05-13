@@ -1,8 +1,10 @@
 import { currentUser } from '@clerk/nextjs/server';
 import Link from 'next/link';
-import { FaArrowLeft, FaWhatsapp, FaFileInvoiceDollar, FaUserPlus, FaBell } from 'react-icons/fa';
+import { FaArrowLeft, FaWhatsapp, FaFileInvoiceDollar, FaUserPlus, FaBell, FaCalendarCheck, FaUserCircle } from 'react-icons/fa';
 import { RiSettings4Fill, RiDashboardLine } from 'react-icons/ri';
 import FileUploaderWrapper from './FileUploaderWrapper';
+import UserProfile from '../../components/UserProfile';
+import { Suspense } from 'react';
 
 export default async function DashboardPage() {
   // Get the current user - the middleware should already protect this route
@@ -19,17 +21,17 @@ export default async function DashboardPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50/80 to-gray-100/80 dark:from-gray-900/80 dark:to-gray-800/80 backdrop-blur-sm">
       <div className="flex">
-        {/* Sidebar */}
-        <div className="hidden md:flex flex-col w-64 bg-white dark:bg-gray-800 shadow-md p-4 min-h-screen">
+        {/* Sidebar - fixed position with glass effect */}
+        <div className="hidden md:flex flex-col w-64 bg-white/70 dark:bg-gray-800/70 shadow-md p-4 h-screen fixed backdrop-blur-lg border-r border-gray-100/50 dark:border-gray-700/50">
           <div className="mb-8 mt-4">
             <h2 className="text-xl font-bold text-primary flex items-center gap-2">
               <RiDashboardLine /> DebitPing
             </h2>
           </div>
           
-          <nav className="flex-1">
+          <nav className="flex-1 overflow-y-auto">
             <div className="mb-6">
               <h3 className="text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2">Main</h3>
               <ul className="space-y-2">
@@ -85,67 +87,85 @@ export default async function DashboardPage() {
           </div>
         </div>
         
-        {/* Main content */}
-        <div className="flex-1 p-4 lg:p-6">
+        {/* Main content - with left margin to account for fixed sidebar */}
+        <div className="flex-1 p-4 lg:p-6 md:ml-64">
           <div className="flex flex-col md:flex-row md:items-center justify-between mb-4 gap-3">
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
               Dashboard
             </h1>
             <div>
-              <Link href="/" className="flex items-center px-4 py-2 text-sm text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700">
+              <Link href="/" className="flex items-center px-4 py-2 text-sm text-gray-600 dark:text-gray-300 border border-gray-200/50 dark:border-gray-700/50 rounded-md hover:bg-gray-100/70 dark:hover:bg-gray-700/70 backdrop-blur-sm">
                 <FaArrowLeft className="mr-2" />
                 Back to Home
               </Link>
             </div>
           </div>
           
-          <div className="mb-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 border border-gray-100 dark:border-gray-700">
-            <h2 className="text-xl font-semibold mb-3">Upload Your Debit Data</h2>
-            <FileUploaderWrapper />
-          </div>
-            
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+          {/* Cards at the top */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div className="bg-white/70 dark:bg-gray-800/70 border border-gray-200/50 dark:border-gray-700/50 p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow backdrop-blur-lg">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="font-medium text-lg">Pending Payments</h3>
-                <div className="p-2 bg-amber-100 text-amber-600 rounded-full">
+                <div className="p-2 bg-amber-100/80 text-amber-600 rounded-full backdrop-blur-sm">
                   <FaFileInvoiceDollar />
                 </div>
               </div>
-              <p className="text-3xl font-bold text-gray-900 dark:text-white">$0.00</p>
+              <p className="text-3xl font-bold text-gray-900 dark:text-white">₹0.00</p>
               <p className="text-sm text-gray-500 dark:text-gray-400">From 0 invoices</p>
-              <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
+              <div className="mt-3 pt-3 border-t border-gray-100/50 dark:border-gray-700/50">
                 <Link href="/dashboard/invoices" className="text-sm text-primary hover:underline">View all invoices</Link>
               </div>
             </div>
               
-            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+            <div className="bg-white/70 dark:bg-gray-800/70 border border-gray-200/50 dark:border-gray-700/50 p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow backdrop-blur-lg">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="font-medium text-lg">Messages Sent</h3>
-                <div className="p-2 bg-green-100 text-green-600 rounded-full">
+                <div className="p-2 bg-green-100/80 text-green-600 rounded-full backdrop-blur-sm">
                   <FaWhatsapp />
                 </div>
               </div>
               <p className="text-3xl font-bold text-gray-900 dark:text-white">0</p>
               <p className="text-sm text-gray-500 dark:text-gray-400">Last 30 days</p>
-              <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
+              <div className="mt-3 pt-3 border-t border-gray-100/50 dark:border-gray-700/50">
                 <Link href="/dashboard/messages" className="text-sm text-primary hover:underline">View message history</Link>
               </div>
             </div>
               
-            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+            <div className="bg-white/70 dark:bg-gray-800/70 border border-gray-200/50 dark:border-gray-700/50 p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow backdrop-blur-lg">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="font-medium text-lg">Successful Payments</h3>
-                <div className="p-2 bg-blue-100 text-blue-600 rounded-full">
+                <div className="p-2 bg-blue-100/80 text-blue-600 rounded-full backdrop-blur-sm">
                   <FaFileInvoiceDollar />
                 </div>
               </div>
-              <p className="text-3xl font-bold text-gray-900 dark:text-white">$0.00</p>
+              <p className="text-3xl font-bold text-gray-900 dark:text-white">₹0.00</p>
               <p className="text-sm text-gray-500 dark:text-gray-400">Total collected</p>
-              <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
+              <div className="mt-3 pt-3 border-t border-gray-100/50 dark:border-gray-700/50">
                 <Link href="/dashboard/analytics" className="text-sm text-primary hover:underline">View analytics</Link>
               </div>
             </div>
+              
+            <div className="bg-white/70 dark:bg-gray-800/70 border border-gray-200/50 dark:border-gray-700/50 p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow backdrop-blur-lg">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-medium text-lg">Last Reminder</h3>
+                <div className="p-2 bg-purple-100/80 text-purple-600 rounded-full backdrop-blur-sm">
+                  <FaCalendarCheck />
+                </div>
+              </div>
+              <p className="text-3xl font-bold text-gray-900 dark:text-white">13 May 2025</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">via WhatsApp</p>
+              <div className="mt-3 pt-3 border-t border-gray-100/50 dark:border-gray-700/50">
+                <Link href="/dashboard/reminders" className="text-sm text-primary hover:underline">View reminder history</Link>
+              </div>
+            </div>
+          </div>
+          
+          {/* Upload Section */}
+          <div className="mb-6 bg-white/70 dark:bg-gray-800/70 rounded-lg shadow-sm p-4 border border-gray-100/50 dark:border-gray-700/50 backdrop-blur-lg">
+            <h2 className="text-xl font-semibold mb-3">Upload Your Debit Data</h2>
+            <Suspense fallback={<div>Loading uploader...</div>}>
+              <FileUploaderWrapper />
+            </Suspense>
           </div>
         </div>
       </div>

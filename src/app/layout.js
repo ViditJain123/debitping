@@ -7,7 +7,9 @@ import {
   UserButton,
 } from '@clerk/nextjs'
 import { Geist, Geist_Mono } from 'next/font/google'
+import { Suspense } from 'react'
 import './globals.css'
+import LoadingProvider from '../components/LoadingProvider'
 
 
 
@@ -36,7 +38,13 @@ export default function RootLayout({ children }) {
         <body
           className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         >
-          {children}
+          <Suspense fallback={<div className="fixed top-0 left-0 right-0 z-[9999] h-1 bg-gray-200 dark:bg-gray-800">
+            <div className="h-full bg-gradient-to-r from-primary to-secondary animate-loading-bar"></div>
+          </div>}>
+            <LoadingProvider>
+              {children}
+            </LoadingProvider>
+          </Suspense>
         </body>
       </html>
     </ClerkProvider>

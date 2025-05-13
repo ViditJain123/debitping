@@ -1,4 +1,5 @@
 import { SignIn } from '@clerk/nextjs';
+import ClerkSignInWrapper from '../../../components/ClerkSignInWrapper';
 
 export default function SignInPage() {
   return (
@@ -13,7 +14,9 @@ export default function SignInPage() {
           </p>
         </div>
         <div className="mt-8">
-          <SignIn routing="path" path="/sign-in" signUpUrl="/sign-up" fallbackRedirectUrl="/dashboard" />
+          <ClerkSignInWrapper>
+            <SignIn routing="path" path="/sign-in" signUpUrl="/sign-up" fallbackRedirectUrl="/dashboard" />
+          </ClerkSignInWrapper>
         </div>
       </div>
     </div>

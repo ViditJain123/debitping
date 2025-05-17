@@ -1,7 +1,7 @@
 import { currentUser } from '@clerk/nextjs/server';
 import Link from 'next/link';
-import { FaArrowLeft } from 'react-icons/fa';
 import UserProfile from '../../../components/UserProfile';
+import DashboardLayout from '../../../components/DashboardLayout';
 
 export default async function SettingsPage() {
   // Get the current user
@@ -16,18 +16,8 @@ export default async function SettingsPage() {
   };
 
   return (
-    <div className="w-full">
-      <div className="flex flex-col md:flex-row md:items-center justify-between mb-4 gap-3">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-          Settings
-        </h1>
-        <div>
-          <Link href="/dashboard" className="flex items-center px-4 py-2 text-sm text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700">
-            <FaArrowLeft className="mr-2" />
-            Back to Dashboard
-          </Link>
-        </div>
-      </div>
+    <DashboardLayout title="Settings">
+      <div className="space-y-6">
       
       <div className="mb-6 bg-white/70 dark:bg-gray-800/70 backdrop-blur-lg rounded-lg shadow-sm p-4 border border-gray-100/50 dark:border-gray-700/50">
         <div className="flex items-center gap-2 mb-3">
@@ -36,7 +26,28 @@ export default async function SettingsPage() {
         <UserProfile />
       </div>
       
-      {/* Additional settings sections can be added here */}
-    </div>
+      {/* Twilio Integration Settings */}
+      <div className="mb-6 bg-white/70 dark:bg-gray-800/70 backdrop-blur-lg rounded-lg shadow-sm p-4 border border-gray-100/50 dark:border-gray-700/50">
+        <div className="flex items-center gap-2 mb-3">
+          <h2 className="text-xl font-semibold">WhatsApp Integration</h2>
+        </div>
+        
+        <p className="text-gray-600 dark:text-gray-300 mb-4">
+          Your Twilio WhatsApp integration settings are configured through environment variables. You can use the
+          testing tool to verify your settings and send test messages.
+        </p>
+        
+        <Link 
+          href="/dashboard/settings/twilio-test" 
+          className="inline-flex items-center px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors"
+        >
+          Test WhatsApp Integration
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+          </svg>
+        </Link>
+      </div>
+      </div>
+    </DashboardLayout>
   );
 }

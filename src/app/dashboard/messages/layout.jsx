@@ -9,7 +9,7 @@ import {
 import { RiSettings4Fill, RiDashboardLine } from "react-icons/ri";
 import DealersClientWrapper from "../../../components/DealersClientWrapper";
 
-export default async function DealersLayout({ children }) {
+export default async function MessagesLayout({ children }) {
   // Get the current user - the middleware should already protect this route
   const user = await currentUser();
 
@@ -50,7 +50,7 @@ export default async function DealersLayout({ children }) {
                   <li>
                     <Link
                       href="/dashboard/dealers"
-                      className="flex items-center px-4 py-2 text-gray-800 dark:text-white bg-gray-100 dark:bg-gray-700 rounded-md"
+                      className="flex items-center px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md"
                     >
                       <FaUserPlus className="mr-3" /> Dealers
                     </Link>
@@ -58,7 +58,7 @@ export default async function DealersLayout({ children }) {
                   <li>
                     <Link
                       href="/dashboard/messages"
-                      className="flex items-center px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md"
+                      className="flex items-center px-4 py-2 text-gray-800 dark:text-white bg-gray-100 dark:bg-gray-700 rounded-md"
                     >
                       <FaWhatsapp className="mr-3" /> Send Messages
                     </Link>

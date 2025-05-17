@@ -5,6 +5,7 @@ import { RiSettings4Fill, RiDashboardLine } from 'react-icons/ri';
 import FileUploaderWrapper from './FileUploaderWrapper';
 import UserProfile from '../../components/UserProfile';
 import { Suspense } from 'react';
+import { getFinancialSummary } from '../../utils/financialSummary';
 
 export default async function DashboardPage() {
   // Get the current user - the middleware should already protect this route
@@ -19,19 +20,38 @@ export default async function DashboardPage() {
     emailAddresses: [{ emailAddress: 'example@email.com' }],
     imageUrl: null
   };
+  
+  // Get financial summary data for the dashboard
+  let financialSummary = {
+    pendingAmount: 0,
+    pendingInvoices: 0,
+    successfulPayments: 0,
+    messagesSent: 0,
+    lastReminderDate: new Date(),
+    totalDealers: 0
+  };
+  
+  try {
+    if (user) {
+      financialSummary = await getFinancialSummary(user.id);
+    }
+  } catch (error) {
+    console.error('Error fetching financial summary:', error);
+    // Continue with default values
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50/80 to-gray-100/80 dark:from-gray-900/80 dark:to-gray-800/80 backdrop-blur-sm">
-      <div className="flex">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50/80 to-gray-100/80 dark:from-gray-900/80 dark:to-gray-800/80 backdrop-blur-sm overflow-hidden">
+      <div className="flex h-screen">
         {/* Sidebar - fixed position with glass effect */}
-        <div className="hidden md:flex flex-col w-64 bg-white/70 dark:bg-gray-800/70 shadow-md p-4 h-screen fixed backdrop-blur-lg border-r border-gray-100/50 dark:border-gray-700/50">
+        <div className="hidden md:flex flex-col w-64 bg-white/70 dark:bg-gray-800/70 shadow-md p-4 h-screen fixed backdrop-blur-lg border-r border-gray-100/50 dark:border-gray-700/50 overflow-hidden">
           <div className="mb-8 mt-4">
             <h2 className="text-xl font-bold text-primary flex items-center gap-2">
               <RiDashboardLine /> DebitPing
             </h2>
           </div>
           
-          <nav className="flex-1 overflow-y-auto">
+          <nav className="flex-1">
             <div className="mb-6">
               <h3 className="text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2">Main</h3>
               <ul className="space-y-2">
@@ -43,6 +63,11 @@ export default async function DashboardPage() {
                 <li>
                   <Link href="/dashboard/dealers" className="flex items-center px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md">
                     <FaUserPlus className="mr-3" /> Dealers
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/dashboard/messages" className="flex items-center px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md">
+                    <FaWhatsapp className="mr-3" /> Send Messages
                   </Link>
                 </li>
               </ul>
@@ -88,7 +113,7 @@ export default async function DashboardPage() {
         </div>
         
         {/* Main content - with left margin to account for fixed sidebar */}
-        <div className="flex-1 p-4 lg:p-6 md:ml-64">
+        <div className="flex-1 p-4 lg:p-6 md:ml-64 overflow-y-auto">
           <div className="flex flex-col md:flex-row md:items-center justify-between mb-4 gap-3">
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
               Dashboard
@@ -110,10 +135,14 @@ export default async function DashboardPage() {
                   <FaFileInvoiceDollar />
                 </div>
               </div>
-              <p className="text-3xl font-bold text-gray-900 dark:text-white">₹0.00</p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">From 0 invoices</p>
+              <p className="text-3xl font-bold text-gray-900 dark:text-white">
+                ₹{financialSummary.pendingAmount.toLocaleString('en-IN', { maximumFractionDigits: 2, minimumFractionDigits: 2 })}
+              </p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                From {financialSummary.pendingInvoices} {financialSummary.pendingInvoices === 1 ? 'dealer' : 'dealers'}
+              </p>
               <div className="mt-3 pt-3 border-t border-gray-100/50 dark:border-gray-700/50">
-                <Link href="/dashboard/invoices" className="text-sm text-primary hover:underline">View all invoices</Link>
+                <Link href="/dashboard/dealers" className="text-sm text-primary hover:underline">View all dealers</Link>
               </div>
             </div>
               
@@ -124,7 +153,7 @@ export default async function DashboardPage() {
                   <FaWhatsapp />
                 </div>
               </div>
-              <p className="text-3xl font-bold text-gray-900 dark:text-white">0</p>
+              <p className="text-3xl font-bold text-gray-900 dark:text-white">{financialSummary.messagesSent}</p>
               <p className="text-sm text-gray-500 dark:text-gray-400">Last 30 days</p>
               <div className="mt-3 pt-3 border-t border-gray-100/50 dark:border-gray-700/50">
                 <Link href="/dashboard/messages" className="text-sm text-primary hover:underline">View message history</Link>
@@ -138,7 +167,9 @@ export default async function DashboardPage() {
                   <FaFileInvoiceDollar />
                 </div>
               </div>
-              <p className="text-3xl font-bold text-gray-900 dark:text-white">₹0.00</p>
+              <p className="text-3xl font-bold text-gray-900 dark:text-white">
+                ₹{financialSummary.successfulPayments.toLocaleString('en-IN', { maximumFractionDigits: 2, minimumFractionDigits: 2 })}
+              </p>
               <p className="text-sm text-gray-500 dark:text-gray-400">Total collected</p>
               <div className="mt-3 pt-3 border-t border-gray-100/50 dark:border-gray-700/50">
                 <Link href="/dashboard/analytics" className="text-sm text-primary hover:underline">View analytics</Link>
@@ -152,7 +183,9 @@ export default async function DashboardPage() {
                   <FaCalendarCheck />
                 </div>
               </div>
-              <p className="text-3xl font-bold text-gray-900 dark:text-white">13 May 2025</p>
+              <p className="text-3xl font-bold text-gray-900 dark:text-white">
+                {financialSummary.lastReminderDate.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+              </p>
               <p className="text-sm text-gray-500 dark:text-gray-400">via WhatsApp</p>
               <div className="mt-3 pt-3 border-t border-gray-100/50 dark:border-gray-700/50">
                 <Link href="/dashboard/reminders" className="text-sm text-primary hover:underline">View reminder history</Link>
@@ -162,7 +195,11 @@ export default async function DashboardPage() {
           
           {/* Upload Section */}
           <div className="mb-6 bg-white/70 dark:bg-gray-800/70 rounded-lg shadow-sm p-4 border border-gray-100/50 dark:border-gray-700/50 backdrop-blur-lg">
-            <h2 className="text-xl font-semibold mb-3">Upload Your Debit Data</h2>
+            <h2 className="text-xl font-semibold mb-3">Upload Your Dealer Data</h2>
+            <p className="text-sm text-gray-500 mb-4">
+              Upload your Excel file with dealer names in column A, phone numbers in column B, and outstanding amounts in rupees (₹) in column C.
+              The system will automatically create new dealers or update existing ones.
+            </p>
             <Suspense fallback={<div>Loading uploader...</div>}>
               <FileUploaderWrapper />
             </Suspense>

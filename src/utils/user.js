@@ -73,7 +73,7 @@ export async function getUserByClerkId(clerkId) {
   
   try {
     await connectToDatabase();
-    return await User.findOne({ clerkId });
+    return await User.findOne({ clerkId }).populate('dealers');
   } catch (error) {
     console.error('Error getting user by Clerk ID:', error);
     return null;
@@ -92,9 +92,29 @@ export async function getUserByEmail(email) {
   
   try {
     await connectToDatabase();
-    return await User.findOne({ email });
+    return await User.findOne({ email }).populate('dealers');
   } catch (error) {
     console.error('Error getting user by email:', error);
     return null;
+  }
+}
+
+/**
+ * Get a user by their Clerk ID
+ * @param {string} clerkId - The Clerk ID of the user
+ * @returns {Object|null} - The user object or null if not found
+ */
+export async function getUserById(clerkId) {
+  if (!clerkId) {
+    throw new Error('Clerk ID is required');
+  }
+  
+  try {
+    await connectToDatabase();
+    
+    return await User.findOne({ clerkId });
+  } catch (error) {
+    console.error('Error getting user by ID:', error);
+    throw new Error(`Failed to get user: ${error.message}`);
   }
 }

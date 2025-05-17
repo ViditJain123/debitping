@@ -26,6 +26,17 @@ const userSchema = new mongoose.Schema(
       type: Date,
       default: Date.now,
     },
+    dealers: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Dealer'
+    }],
+    lastMessageSent: {
+      type: String,
+      default: '',
+    },
+    lastMessageSentAt: {
+      type: Date,
+    },
   },
   {
     timestamps: true, // Adds createdAt and updatedAt fields

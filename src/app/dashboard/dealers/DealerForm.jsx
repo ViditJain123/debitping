@@ -6,7 +6,6 @@ import { FiSave, FiX } from 'react-icons/fi';
 export default function DealerForm({ dealer = {}, onSubmit, onCancel }) {
   const [formData, setFormData] = useState({
     name: dealer.name || '',
-    email: dealer.email || '',
     phone: dealer.phone || '',
     outstandingAmount: dealer.outstandingAmount || 0
   });
@@ -23,6 +22,19 @@ export default function DealerForm({ dealer = {}, onSubmit, onCancel }) {
     }
   };
   
+  // Format phone number to E.164 format
+  const formatE164PhoneNumber = (phoneNumber) => {
+    // Remove all non-digit characters except the + sign
+    const stripped = phoneNumber.replace(/[^\d+]/g, '');
+    
+    // Ensure it starts with a + sign
+    if (!stripped.startsWith('+')) {
+      return '+' + stripped;
+    }
+    
+    return stripped;
+  };
+
   const validateForm = () => {
     const newErrors = {};
     
@@ -30,12 +42,9 @@ export default function DealerForm({ dealer = {}, onSubmit, onCancel }) {
       newErrors.name = 'Dealer name is required';
     }
     
-    if (formData.email && !/^\S+@\S+\.\S+$/.test(formData.email)) {
-      newErrors.email = 'Valid email is required';
-    }
-    
-    if (formData.phone && !/^[+\d\s()-]{7,20}$/.test(formData.phone)) {
-      newErrors.phone = 'Valid phone number is required';
+    // Validate phone: must contain at least 10 digits
+    if (!formData.phone || formData.phone.replace(/\D/g, '').length < 10) {
+      newErrors.phone = 'Valid phone number with at least 10 digits is required';
     }
     
     if (isNaN(formData.outstandingAmount) || formData.outstandingAmount < 0) {
@@ -50,8 +59,12 @@ export default function DealerForm({ dealer = {}, onSubmit, onCancel }) {
     e.preventDefault();
     
     if (validateForm()) {
+      // Format the phone number to E.164 format before submitting
+      const formattedPhone = formatE164PhoneNumber(formData.phone);
+      
       onSubmit({
         ...formData,
+        phone: formattedPhone,
         outstandingAmount: parseFloat(formData.outstandingAmount)
       });
     }
@@ -78,26 +91,8 @@ export default function DealerForm({ dealer = {}, onSubmit, onCancel }) {
       </div>
       
       <div>
-        <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Email
-        </label>
-        <input
-          type="email"
-          id="email"
-          name="email"
-          value={formData.email}
-          onChange={handleChange}
-          className={`w-full px-3 py-2 border rounded-md dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary ${
-            errors.email ? 'border-red-500 dark:border-red-500' : 'border-gray-300 dark:border-gray-600'
-          }`}
-          placeholder="Enter email address"
-        />
-        {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
-      </div>
-      
-      <div>
         <label htmlFor="phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Phone Number
+          Phone Number *
         </label>
         <input
           type="text"
@@ -115,7 +110,7 @@ export default function DealerForm({ dealer = {}, onSubmit, onCancel }) {
       
       <div>
         <label htmlFor="outstandingAmount" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Outstanding Amount (₹)
+          Outstanding Amount (₹) 
         </label>
         <input
           type="number"

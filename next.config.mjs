@@ -8,6 +8,12 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  // Increase the bodyParser size limit for API routes
+  api: {
+    bodyParser: {
+      sizeLimit: '10mb', // Increase the maximum file upload size to 10MB
+    },
+  },
 };
 
 export default nextConfig;

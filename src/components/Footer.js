@@ -17,7 +17,7 @@ export default function Footer() {
             viewport={{ once: true, margin: "-100px" }}
             transition={{ duration: 0.5 }}
           >
-            <h3 className="text-2xl font-bold mb-6">About DebitPing</h3>
+            <h3 className="text-2xl font-bold mb-6">About ZYVER</h3>
             <p className="text-gray-600 dark:text-gray-300 mb-6">
               Built by a small team who hate chasing people for money. We&apos;re on a mission to automate awkward conversations
               and help businesses get paid faster.
@@ -73,7 +73,7 @@ export default function Footer() {
           <div>
             <h4 className="font-bold text-lg mb-4">Company</h4>
             <ul className="space-y-2">
-              {['About Us', 'Careers', 'Privacy Policy', 'Terms of Service'].map((item) => (
+              {['About Us', 'Careers'].map((item) => (
                 <li key={item}>
                   <a 
                     href="#"
@@ -83,6 +83,22 @@ export default function Footer() {
                   </a>
                 </li>
               ))}
+              <li key="Privacy Policy">
+                <Link 
+                  href="/privacy-policy"
+                  className="text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-primary transition-colors"
+                >
+                  Privacy Policy
+                </Link>
+              </li>
+              <li key="Terms of Service">
+                <a 
+                  href="#"
+                  className="text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-primary transition-colors"
+                >
+                  Terms of Service
+                </a>
+              </li>
             </ul>
           </div>
           
@@ -91,10 +107,10 @@ export default function Footer() {
             <ul className="space-y-2">
               <li>
                 <a 
-                  href="mailto:hello@debitping.com"
+                  href="mailto:hello@zyver.com"
                   className="text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-primary transition-colors"
                 >
-                  hello@debitping.com
+                  hello@zyver.com
                 </a>
               </li>
               <li className="text-gray-600 dark:text-gray-400">
@@ -109,11 +125,11 @@ export default function Footer() {
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="flex items-center mb-4 md:mb-0">
               <FaWhatsapp className="h-6 w-6 text-primary mr-2" />
-              <span className="font-bold text-lg">DebitPing</span>
+              <span className="font-bold text-lg">ZYVER</span>
             </div>
             
             <p className="text-gray-500 text-sm flex items-center">
-              &copy; {new Date().getFullYear()} DebitPing. All rights reserved. Made with <FiHeart className="mx-1 text-red-500" /> in India
+              &copy; {new Date().getFullYear()} ZYVER. All rights reserved. Made with <FiHeart className="mx-1 text-red-500" /> in India
             </p>
           </div>
         </div>

@@ -9,6 +9,7 @@ import PricingSection from "../components/PricingSection";
 import FAQSection from "../components/FAQSection";
 import CTASection from "../components/CTASection";
 import Footer from "../components/Footer";
+import FacebookExample from "../components/FacebookExample";
 
 export default function Home() {
   return (
@@ -16,6 +17,9 @@ export default function Home() {
       <Navbar />
       <main>
         <HeroSection />
+        <div className="container mx-auto px-4 py-8">
+          <FacebookExample />
+        </div>
         <HowItWorks />
         <Features />
         <AudienceSection />

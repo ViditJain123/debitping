@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { FiMenu, FiX, FiMoon, FiSun } from 'react-icons/fi';
-import { FaWhatsapp } from 'react-icons/fa';
 import { SignInButton, SignUpButton, UserButton, SignedIn, SignedOut } from '@clerk/nextjs';
 
 export default function Navbar() {
@@ -50,8 +49,7 @@ export default function Navbar() {
           {/* Logo */}
           <div className="flex-shrink-0 flex items-center">
             <Link href="/" className="flex items-center space-x-2">
-              <FaWhatsapp className="h-8 w-8 text-primary" />
-              <span className="font-bold text-xl">DebtPing</span>
+              <span className="font-bold text-xl">ZYVER</span>
             </Link>
           </div>
           

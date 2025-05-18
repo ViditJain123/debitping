@@ -19,7 +19,7 @@ export default function HeroSection() {
           >
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
               Never Chase Payments <span className="gradient-text">Again    </span> <br />
-              Automate It with DebitPing
+              Automate It with ZYVER
             </h1>
             
             <p className="text-lg md:text-xl text-gray-600 dark:text-gray-300 max-w-lg">
@@ -76,10 +76,10 @@ export default function HeroSection() {
                 {/* WhatsApp header */}
                 <div className="bg-[#128C7E] text-white p-4 flex items-center">
                   <div className="w-10 h-10 rounded-full bg-white/20 mr-3 flex items-center justify-center">
-                    <span className="font-bold">DP</span>
+                    <span className="font-bold">ZY</span>
                   </div>
                   <div>
-                    <p className="font-medium">DebitPing Assistant</p>
+                    <p className="font-medium">ZYVER Assistant</p>
                     <p className="text-xs opacity-80">Online</p>
                   </div>
                 </div>

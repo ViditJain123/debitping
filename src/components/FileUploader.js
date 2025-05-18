@@ -129,12 +129,12 @@ export default function FileUploader({ onUploadComplete }) {
   return (
     <div className="w-full">
       <div 
-        className={`w-full border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors h-[340px] ${
+        className={`w-full border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all h-[340px] ${
           isDragging 
-            ? 'border-primary bg-primary/5' 
+            ? 'border-primary bg-primary/10 shadow-lg' 
             : file 
-              ? 'border-green-500 bg-green-50 dark:bg-green-900/10' 
-              : 'border-gray-300 dark:border-gray-600'
+              ? 'border-green-500 bg-green-50/70 dark:bg-green-900/20 backdrop-blur-sm' 
+              : 'border-gray-300/70 dark:border-gray-600/70 glass'
         }`}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
@@ -144,33 +144,33 @@ export default function FileUploader({ onUploadComplete }) {
         <div className="flex flex-col items-center justify-center h-full">
           {!file ? (
             <>
-              <svg className="w-12 h-12 mb-3 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <svg className="w-14 h-14 mb-4 text-primary/70 dark:text-primary/80" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
               </svg>
-              <h3 className="text-lg font-medium mb-2 text-gray-700 dark:text-gray-200">Drag and drop your Excel file</h3>
+              <h3 className="text-lg font-medium mb-2 gradient-text">Drag and drop your Excel file</h3>
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
                 Your file should have dealer names in column A and amounts in column B (starting from row 6)
               </p>
               <div className="flex items-center justify-center space-x-2 mb-3">
-                <span className="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded text-xs">Column A (Name)</span>
+                <span className="px-3 py-1 glass rounded-lg text-xs">Column A (Name)</span>
                 <span className="text-gray-400 dark:text-gray-500">&rarr;</span>
-                <span className="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded text-xs">Column B (Amount)</span>
+                <span className="px-3 py-1 glass rounded-lg text-xs">Column B (Amount)</span>
               </div>
               <p className="text-xs text-gray-500 dark:text-gray-400">
                 Supported formats: .xlsx, .xls, .csv
               </p>
-              <button className="mt-4 px-6 py-2 bg-primary text-white rounded-md hover:bg-primary-dark transition-colors">
+              <button className="mt-5 px-6 py-2.5 bg-gradient-to-r from-primary to-secondary text-white rounded-lg hover:shadow-lg transition-all">
                 Browse Files
               </button>
             </>
           ) : (
             <>
-              <div className="w-12 h-12 mb-3 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
-                <svg className="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <div className="w-14 h-14 mb-4 bg-green-100/90 dark:bg-green-900/40 rounded-full flex items-center justify-center shadow-md">
+                <svg className="w-7 h-7 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
                 </svg>
               </div>
-              <h3 className="text-lg font-medium mb-2 text-gray-700 dark:text-gray-200">
+              <h3 className="text-lg font-medium mb-2 gradient-text">
                 {isUploading ? 'Analyzing File...' : 'File Ready to Process'}
               </h3>
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">{file.name}</p>
@@ -179,7 +179,7 @@ export default function FileUploader({ onUploadComplete }) {
               {previewData.length > 0 && !isUploading && (
                 <div className="w-full max-w-xs mx-auto mt-1 mb-3 text-left">
                   <p className="text-xs font-medium text-gray-500 mb-1">Preview (first 5 entries):</p>
-                  <div className="max-h-28 overflow-y-auto text-xs border rounded p-2 bg-white dark:bg-gray-800">
+                  <div className="max-h-28 overflow-y-auto text-xs glass rounded-lg p-3">
                     {previewData.map((dealer, index) => (
                       <div key={index} className="flex justify-between py-1">
                         <span className="font-medium">{dealer.companyName}</span>
@@ -192,9 +192,9 @@ export default function FileUploader({ onUploadComplete }) {
               
               {isUploading ? (
                 <div className="w-full max-w-xs mx-auto mt-3">
-                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                  <div className="w-full bg-gray-200/70 dark:bg-gray-700/70 rounded-full h-2.5">
                     <div 
-                      className="bg-primary h-2 rounded-full" 
+                      className="bg-gradient-to-r from-primary to-secondary h-2.5 rounded-full" 
                       style={{ width: `${uploadProgress}%` }}
                     ></div>
                   </div>
@@ -202,7 +202,7 @@ export default function FileUploader({ onUploadComplete }) {
                 </div>
               ) : (
                 <button 
-                  className="mt-3 px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+                  className="mt-3 px-6 py-2.5 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg hover:shadow-lg transition-all"
                   onClick={(e) => {
                     e.stopPropagation();
                     // Process the file
@@ -226,7 +226,7 @@ export default function FileUploader({ onUploadComplete }) {
                 Upload a different file
               </button>
             </>
-          )}
+          )}&#125;
         </div>
         <input 
           type="file" 

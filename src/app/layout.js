@@ -10,6 +10,7 @@ import { Geist, Geist_Mono } from 'next/font/google'
 import { Suspense } from 'react'
 import './globals.css'
 import LoadingProvider from '../components/LoadingProvider'
+import FacebookSDKScript from '../components/FacebookSDKScript'
 
 
 
@@ -26,7 +27,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "DebitPing - Automate WhatsApp Payment Reminders",
+  title: "ZYVER - Automate WhatsApp Payment Reminders",
   description: "Connect your accounting tools and let WhatsApp follow up on your overdue payments automatically. Never chase payments again.",
   keywords: ["whatsapp automation", "payment reminders", "invoice reminders", "accounting automation"],
 };
@@ -38,6 +39,9 @@ export default function RootLayout({ children }) {
         <body
           className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         >
+          {/* Facebook SDK */}
+          <FacebookSDKScript />
+          
           <Suspense fallback={<div className="fixed top-0 left-0 right-0 z-[9999] h-1 bg-gray-200 dark:bg-gray-800">
             <div className="h-full bg-gradient-to-r from-primary to-secondary animate-loading-bar"></div>
           </div>}>

@@ -6,12 +6,21 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "package-extension": "node scripts/createExtensionZip.js",
+    "update-extension-version": "node scripts/updateExtensionVersion.js",
+    "test-extension": "node scripts/testExtension.js",
+    "reset-extension": "node scripts/resetExtensionDetection.js"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.19.2",
+    "@radix-ui/react-dialog": "^1.1.13",
+    "@radix-ui/react-slot": "^1.2.2",
+    "archiver": "^7.0.1",
+    "fast-xml-parser": "^5.2.3",
     "formidable": "^3.5.4",
     "framer-motion": "^12.11.0",
+    "lucide-react": "^0.511.0",
     "mongodb": "^6.16.0",
     "mongoose": "^8.14.2",
     "next": "15.3.2",

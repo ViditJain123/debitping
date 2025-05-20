@@ -23,6 +23,7 @@ export async function createDealer(dealerData, distributorClerkId) {
       phoneNumber: dealerData.phoneNumber,
       amount: dealerData.amount || 0,
       distributorClerkRef: distributorClerkId,
+      outstandingBills: dealerData.outstandingBills || []
     });
 
     // Save the dealer

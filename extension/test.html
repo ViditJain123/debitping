@@ -1,0 +1,337 @@
+// filepath: /Users/viditjain/Desktop/whatsapp_automation/extension/test.html
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Tally CORS Bridge - Test Page</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      line-height: 1.5;
+    }
+    h1, h2, h3 {
+      color: #333;
+    }
+    .card {
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      padding: 16px;
+      margin-bottom: 16px;
+      background-color: #f9f9f9;
+    }
+    .success {
+      background-color: #e6ffed;
+      border-color: #b4d6b4;
+    }
+    .error {
+      background-color: #ffebe9;
+      border-color: #ffbdbd;
+    }
+    .warning {
+      background-color: #fff8e6;
+      border-color: #ffe0a6;
+    }
+    button {
+      background-color: #0070f3;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      margin-right: 8px;
+    }
+    button:hover {
+      background-color: #0051cc;
+    }
+    textarea {
+      width: 100%;
+      min-height: 120px;
+      margin-top: 8px;
+      font-family: monospace;
+      padding: 8px;
+      border-radius: 4px;
+      border: 1px solid #e0e0e0;
+    }
+    .input-group {
+      margin-bottom: 16px;
+    }
+    .input-group label {
+      display: block;
+      margin-bottom: 4px;
+      font-weight: 500;
+    }
+    .input-group input {
+      width: 100%;
+      padding: 8px;
+      border-radius: 4px;
+      border: 1px solid #e0e0e0;
+    }
+    .test-result {
+      margin-top: 16px;
+      border-top: 1px solid #e0e0e0;
+      padding-top: 16px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Tally CORS Bridge Test Page</h1>
+  
+  <div class="card" id="statusCard">
+    <h2>Extension Status</h2>
+    <p>Checking extension status...</p>
+    <div id="statusDetails"></div>
+    <button onclick="detectExtension()">Check Again</button>
+  </div>
+  
+  <div class="card">
+    <h2>Test Tally Connection</h2>
+    <div class="input-group">
+      <label for="tallyEndpoint">Tally Endpoint URL:</label>
+      <input type="text" id="tallyEndpoint" value="http://localhost:9000">
+    </div>
+    <button onclick="testConnection()">Test Connection</button>
+    <div id="connectionResult" class="test-result"></div>
+  </div>
+  
+  <div class="card">
+    <h2>Tally API Test</h2>
+    <div class="input-group">
+      <label for="requestXml">XML Request:</label>
+      <textarea id="requestXml"></textarea>
+    </div>
+    <button onclick="sendTallyRequest()">Send Request</button>
+    <div id="requestResult" class="test-result"></div>
+  </div>
+  
+  <div class="card">
+    <h2>Diagnostics</h2>
+    <button onclick="getDiagnostics()">Get Diagnostics</button>
+    <button onclick="clearDiagnostics()">Clear Diagnostics</button>
+    <div id="diagnosticsResult" class="test-result">
+      <textarea id="diagnosticsData" readonly></textarea>
+    </div>
+  </div>
+  
+  <script>
+    // Initialize with default company list request
+    document.getElementById('requestXml').value = `<ENVELOPE>
+  <HEADER>
+    <VERSION>1</VERSION>
+    <TALLYREQUEST>Export</TALLYREQUEST>
+    <TYPE>Collection</TYPE>
+    <ID>List of Companies</ID>
+  </HEADER>
+  <BODY>
+    <DESC>
+      <STATICVARIABLES>
+        <SVEXPORTFORMAT>$$SysName:XML</SVEXPORTFORMAT>
+      </STATICVARIABLES>
+    </DESC>
+  </BODY>
+</ENVELOPE>`;
+
+    // Extension detection
+    function detectExtension() {
+      const statusCard = document.getElementById('statusCard');
+      const statusDetails = document.getElementById('statusDetails');
+      
+      statusCard.className = 'card';
+      statusDetails.innerHTML = '<p>Checking extension status...</p>';
+      
+      // Global detection flag check
+      if (window.__tallyExtensionDetected) {
+        statusCard.className = 'card success';
+        statusDetails.innerHTML = '<p>✅ Extension detected via global flag</p>';
+        return;
+      }
+      
+      // Try using the detection function
+      if (typeof window.detectTallyExtension === 'function') {
+        window.detectTallyExtension((detected, data) => {
+          if (detected) {
+            statusCard.className = 'card success';
+            statusDetails.innerHTML = `
+              <p>✅ Extension detected via detection function</p>
+              <pre>${JSON.stringify(data, null, 2)}</pre>
+            `;
+          } else {
+            statusCard.className = 'card error';
+            statusDetails.innerHTML = `
+              <p>❌ Extension not detected</p>
+              <pre>${JSON.stringify(data, null, 2)}</pre>
+              <p>Please check that the extension is installed and enabled.</p>
+            `;
+          }
+        }, 2000);
+      } else {
+        statusCard.className = 'card error';
+        statusDetails.innerHTML = `
+          <p>❌ Detection function not available</p>
+          <p>Extension doesn't appear to be installed or content script didn't load correctly.</p>
+        `;
+      }
+    }
+    
+    // Test Tally connection
+    function testConnection() {
+      const endpoint = document.getElementById('tallyEndpoint').value.trim();
+      const connectionResult = document.getElementById('connectionResult');
+      
+      connectionResult.innerHTML = '<p>Testing connection to Tally...</p>';
+      
+      if (!window.__tallyExtensionDetected && typeof window.detectTallyExtension !== 'function') {
+        connectionResult.innerHTML = `
+          <p>❌ Extension not detected. Cannot test connection.</p>
+          <p>Please check that the extension is installed and enabled.</p>
+        `;
+        return;
+      }
+      
+      window.postMessage({
+        type: 'TALLY_API_REQUEST',
+        id: 'connection_test_' + Date.now(),
+        payload: '<ENVELOPE><HEADER><VERSION>1</VERSION><TALLYREQUEST>Export</TALLYREQUEST><TYPE>Collection</TYPE><ID>List of Companies</ID></HEADER><BODY><DESC><STATICVARIABLES><SVEXPORTFORMAT>$$SysName:XML</SVEXPORTFORMAT></STATICVARIABLES></DESC></BODY></ENVELOPE>'
+      }, '*');
+      
+      // Listen for response
+      const responseHandler = function(event) {
+        if (event.data && event.data.type === 'TALLY_API_RESPONSE' && event.data.id.startsWith('connection_test_')) {
+          window.removeEventListener('message', responseHandler);
+          
+          if (event.data.error) {
+            connectionResult.innerHTML = `
+              <p>❌ Connection failed:</p>
+              <pre>${JSON.stringify(event.data.error, null, 2)}</pre>
+            `;
+          } else {
+            connectionResult.innerHTML = `
+              <p>✅ Connection successful!</p>
+              <p>Response received from Tally.</p>
+            `;
+          }
+        }
+      };
+      
+      window.addEventListener('message', responseHandler);
+    }
+    
+    // Send Tally API request
+    function sendTallyRequest() {
+      const requestXml = document.getElementById('requestXml').value.trim();
+      const requestResult = document.getElementById('requestResult');
+      
+      if (!requestXml) {
+        requestResult.innerHTML = '<p>❌ Please enter an XML request.</p>';
+        return;
+      }
+      
+      requestResult.innerHTML = '<p>Sending request to Tally...</p>';
+      
+      if (!window.__tallyExtensionDetected && typeof window.detectTallyExtension !== 'function') {
+        requestResult.innerHTML = `
+          <p>❌ Extension not detected. Cannot send request.</p>
+          <p>Please check that the extension is installed and enabled.</p>
+        `;
+        return;
+      }
+      
+      const requestId = 'tally_request_' + Date.now();
+      
+      window.postMessage({
+        type: 'TALLY_API_REQUEST',
+        id: requestId,
+        payload: requestXml
+      }, '*');
+      
+      // Listen for response
+      const responseHandler = function(event) {
+        if (event.data && event.data.type === 'TALLY_API_RESPONSE' && event.data.id === requestId) {
+          window.removeEventListener('message', responseHandler);
+          
+          if (event.data.error) {
+            requestResult.innerHTML = `
+              <p>❌ Request failed:</p>
+              <pre>${JSON.stringify(event.data.error, null, 2)}</pre>
+            `;
+          } else {
+            requestResult.innerHTML = `
+              <p>✅ Request successful!</p>
+              <textarea readonly style="height: 200px;">${event.data.data}</textarea>
+            `;
+          }
+        }
+      };
+      
+      window.addEventListener('message', responseHandler);
+    }
+    
+    // Get diagnostics
+    function getDiagnostics() {
+      const diagnosticsData = document.getElementById('diagnosticsData');
+      
+      diagnosticsData.value = 'Loading diagnostics...';
+      
+      window.postMessage({
+        type: 'TALLY_GET_DIAGNOSTICS',
+        id: 'get_diagnostics_' + Date.now()
+      }, '*');
+      
+      // Listen for response
+      const responseHandler = function(event) {
+        if (event.data && event.data.type === 'TALLY_DIAGNOSTICS_RESPONSE') {
+          window.removeEventListener('message', responseHandler);
+          diagnosticsData.value = JSON.stringify(event.data.data, null, 2);
+        }
+      };
+      
+      window.addEventListener('message', responseHandler);
+    }
+    
+    // Clear diagnostics
+    function clearDiagnostics() {
+      const diagnosticsData = document.getElementById('diagnosticsData');
+      
+      diagnosticsData.value = 'Clearing diagnostics...';
+      
+      window.postMessage({
+        type: 'TALLY_GET_DIAGNOSTICS',
+        id: 'clear_diagnostics_' + Date.now(),
+        clear: true
+      }, '*');
+      
+      // Listen for response
+      const responseHandler = function(event) {
+        if (event.data && event.data.type === 'TALLY_DIAGNOSTICS_RESPONSE') {
+          window.removeEventListener('message', responseHandler);
+          diagnosticsData.value = 'Diagnostics cleared.';
+          
+          // Get updated diagnostics
+          setTimeout(getDiagnostics, 500);
+        }
+      };
+      
+      window.addEventListener('message', responseHandler);
+    }
+    
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+      detectExtension();
+      
+      // Listen for extension ready event
+      window.addEventListener('tallyExtensionReady', function(event) {
+        const statusCard = document.getElementById('statusCard');
+        const statusDetails = document.getElementById('statusDetails');
+        
+        statusCard.className = 'card success';
+        statusDetails.innerHTML = `
+          <p>✅ Extension detected via ready event</p>
+          <pre>${JSON.stringify(event.detail, null, 2)}</pre>
+        `;
+      });
+    });
+  </script>
+</body>
+</html>

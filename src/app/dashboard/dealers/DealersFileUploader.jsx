@@ -118,12 +118,53 @@ export default function DealersFileUploader({ onImport, onClose }) {
             }
           }
           
-          dealers.push({
+          // Process bill details if available
+          const billNumber = row.D ? row.D.toString().trim() : '';
+          let billDate = null;
+          
+          // Process bill date - convert from DD/MM/YYYY format
+          if (row.E) {
+            try {
+              // Check if it's already a date object
+              if (row.E instanceof Date) {
+                billDate = row.E;
+              } else {
+                // Parse string date in DD/MM/YYYY format
+                const parts = row.E.toString().split('/');
+                if (parts.length === 3) {
+                  // Note: Month is 0-indexed in JavaScript Date
+                  billDate = new Date(parts[2], parts[1] - 1, parts[0]);
+                }
+              }
+            } catch (error) {
+              console.error(`Error parsing date ${row.E}:`, error);
+            }
+          }
+          
+          // Process bill amount
+          const billAmount = row.F ? (typeof row.F === 'string' ? 
+            parseFloat(row.F.replace(/[₹,\s]/g, '')) || 0 : 
+            parseFloat(row.F) || 0) : 0;
+          
+          // Create dealer object with bill information
+          const dealer = {
             companyName: name,
             phoneNumber: phoneClean, // Use the cleaned and formatted phone number with + prefix
             isValid: true,
-            amount: amount
-          });
+            amount: amount,
+            outstandingBills: []
+          };
+          
+          // Add bill if details available
+          if (billNumber && billDate && billAmount > 0) {
+            dealer.outstandingBills.push({
+              billNumber,
+              billDate,
+              billAmount
+            });
+          }
+          
+          dealers.push(dealer);
         }
         
         // Update preview data and upload progress
@@ -259,7 +300,7 @@ export default function DealersFileUploader({ onImport, onClose }) {
                 Drag and drop your dealers Excel file
               </h3>
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
-                Your file should have columns for dealer name, phone number, and outstanding amount in rupees (₹)
+                Your file should have columns for dealer name, phone number, outstanding amount, and bill details (number, date, amount)
               </p>
               <div className="flex flex-wrap justify-center gap-2 mb-3">
                 <span className="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded text-xs">
@@ -268,8 +309,17 @@ export default function DealersFileUploader({ onImport, onClose }) {
                 <span className="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded text-xs">
                   Phone Number
                 </span>
-                <span className="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded text-xs opacity-60">
-                  Amount (₹) (optional)
+                <span className="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded text-xs">
+                  Amount (₹)
+                </span>
+                <span className="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded text-xs">
+                  Bill Number
+                </span>
+                <span className="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded text-xs">
+                  Bill Date
+                </span>
+                <span className="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded text-xs">
+                  Bill Amount
                 </span>
               </div>
               <button 
@@ -302,6 +352,9 @@ export default function DealersFileUploader({ onImport, onClose }) {
                           <th className="px-4 py-2 text-xs font-medium text-gray-500 dark:text-gray-400 text-right">
                             Amount
                           </th>
+                          <th className="px-4 py-2 text-xs font-medium text-gray-500 dark:text-gray-400 text-left">
+                            Bills
+                          </th>
                         </tr>
                       </thead>
                       <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
@@ -318,6 +371,15 @@ export default function DealersFileUploader({ onImport, onClose }) {
                             </td>
                             <td className="px-4 py-2 text-xs text-gray-900 dark:text-gray-100 text-right">
                               ₹{dealer.amount.toLocaleString('en-IN', { maximumFractionDigits: 2, minimumFractionDigits: 2 })}
+                            </td>
+                            <td className="px-4 py-2 text-xs text-gray-500 dark:text-gray-400">
+                              {dealer.outstandingBills && dealer.outstandingBills.length > 0 ? (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                                  {dealer.outstandingBills.length} bill{dealer.outstandingBills.length !== 1 ? 's' : ''}
+                                </span>
+                              ) : (
+                                <span className="text-gray-400 dark:text-gray-500">No bills</span>
+                              )}
                             </td>
                           </tr>
                         ))}

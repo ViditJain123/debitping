@@ -27,26 +27,77 @@ export async function parseExcelFile(file) {
         const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 'A' });
         
         // Extract dealer data starting from row 6 (index 5 in zero-based array)
-        // We're looking for columns A (name) and B (amount)
         const dealers = [];
         
         // Start from row 6 (index 5)
         for (let i = 5; i < jsonData.length; i++) {
           const row = jsonData[i];
           
-          // Skip if either name or amount is missing
+          // Skip if name or phone is missing
           if (!row.A || !row.B) continue;
           
-          // Parse the amount as a number
-          const amount = parseFloat(row.B);
+          // Get dealer name and phone
+          const name = row.A.toString().trim();
+          const phone = row.B.toString().trim();
           
-          // Skip if amount is not a valid number
-          if (isNaN(amount)) continue;
+          // Process the amount field - handle different formats including rupee symbol
+          let amount = 0;
+          if (row.C) {
+            // If it's a string, clean it up (remove rupee symbol, commas, etc.)
+            if (typeof row.C === 'string') {
+              const cleanAmount = row.C.replace(/[₹,\s]/g, '');
+              amount = parseFloat(cleanAmount) || 0;
+            } else {
+              amount = parseFloat(row.C) || 0;
+            }
+          }
           
-          dealers.push({
-            companyName: row.A.toString().trim(),
-            amount: amount
-          });
+          // Process bill details if available
+          const billNumber = row.D ? row.D.toString().trim() : '';
+          let billDate = null;
+          
+          // Process bill date - convert from DD/MM/YYYY format
+          if (row.E) {
+            try {
+              // Check if it's already a date object
+              if (row.E instanceof Date) {
+                billDate = row.E;
+              } else {
+                // Parse string date in DD/MM/YYYY format
+                const parts = row.E.toString().split('/');
+                if (parts.length === 3) {
+                  // Note: Month is 0-indexed in JavaScript Date
+                  billDate = new Date(parts[2], parts[1] - 1, parts[0]);
+                }
+              }
+            } catch (error) {
+              console.error(`Error parsing date ${row.E}:`, error);
+            }
+          }
+          
+          // Process bill amount
+          const billAmount = row.F ? (typeof row.F === 'string' ? 
+            parseFloat(row.F.replace(/[₹,\s]/g, '')) || 0 : 
+            parseFloat(row.F) || 0) : 0;
+          
+          // Create dealer object with bill information
+          const dealer = {
+            companyName: name,
+            phoneNumber: phone,
+            amount: amount,
+            outstandingBills: []
+          };
+          
+          // Add bill if details available
+          if (billNumber && billDate && billAmount > 0) {
+            dealer.outstandingBills.push({
+              billNumber,
+              billDate,
+              billAmount
+            });
+          }
+          
+          dealers.push(dealer);
         }
         
         resolve(dealers);

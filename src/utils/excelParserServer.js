@@ -3,7 +3,8 @@ import * as XLSX from 'xlsx';
 
 /**
  * Parses Excel data from a buffer and extracts dealer information
- * Looks for dealer names in column A and amounts in column B starting from row 6
+ * Looks for dealer data in columns A-F, supporting dealer names, phone numbers, 
+ * outstanding amounts, and bill information
  * 
  * @param {Buffer} buffer - The Excel file buffer
  * @returns {Array} - Array of objects with dealer information
@@ -20,26 +21,83 @@ export function parseExcelBuffer(buffer) {
     // Convert the sheet to JSON
     const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 'A' });
     
-    // Extract dealer data starting from row 6 (index 5 in zero-based array)
+    // Extract dealer data with bill information
     const dealers = [];
+    const dealerMap = new Map(); // Map to group dealers by name and phone
     
-    // Start from row 6 (index 5)
-    for (let i = 5; i < jsonData.length; i++) {
+    // Process all rows, skipping headers
+    for (let i = 0; i < jsonData.length; i++) {
       const row = jsonData[i];
       
-      // Skip if either name or amount is missing
-      if (!row.A || !row.B) continue;
+      // Skip if name is missing or if this looks like a header row
+      if (!row.A || row.A === 'Dealer Name' || row.A === 'Instructions') continue;
       
-      // Parse the amount as a number
-      const amount = parseFloat(row.B);
+      // Get dealer name and phone
+      const name = row.A.toString().trim();
+      const phone = row.B ? row.B.toString().trim() : '';
       
-      // Skip if amount is not a valid number
-      if (isNaN(amount)) continue;
+      // Skip if missing required fields
+      if (!name || !phone) continue;
       
-      dealers.push({
-        companyName: row.A.toString().trim(),
-        amount: amount
-      });
+      // Clean amount string if it has rupee symbol or formatting
+      const totalAmount = row.C ? (typeof row.C === 'string' ? 
+        parseFloat(row.C.replace(/[₹,\s]/g, '')) || 0 : 
+        parseFloat(row.C) || 0) : 0;
+      
+      // Process bill data if available
+      const billNumber = row.D ? row.D.toString().trim() : '';
+      let billDate = null;
+      
+      // Process bill date - convert from DD/MM/YYYY format
+      if (row.E) {
+        try {
+          // Check if it's already a date object
+          if (row.E instanceof Date) {
+            billDate = row.E;
+          } else {
+            // Parse string date in DD/MM/YYYY format
+            const parts = row.E.toString().split('/');
+            if (parts.length === 3) {
+              // Note: Month is 0-indexed in JavaScript Date
+              billDate = new Date(parts[2], parts[1] - 1, parts[0]);
+            }
+          }
+        } catch (error) {
+          console.error(`Error parsing date ${row.E}:`, error);
+        }
+      }
+      
+      // Process bill amount
+      const billAmount = row.F ? (typeof row.F === 'string' ? 
+        parseFloat(row.F.replace(/[₹,\s]/g, '')) || 0 : 
+        parseFloat(row.F) || 0) : 0;
+      
+      // Create unique key for dealer
+      const dealerKey = `${name.toLowerCase()}:::${phone}`;
+      
+      // Get or create dealer in map
+      if (!dealerMap.has(dealerKey)) {
+        dealerMap.set(dealerKey, {
+          companyName: name,
+          phoneNumber: phone,
+          amount: totalAmount,
+          outstandingBills: []
+        });
+      }
+      
+      // Add bill if details available
+      if (billNumber && billDate && billAmount > 0) {
+        dealerMap.get(dealerKey).outstandingBills.push({
+          billNumber,
+          billDate,
+          billAmount
+        });
+      }
+    }
+    
+    // Convert map to array
+    for (const dealer of dealerMap.values()) {
+      dealers.push(dealer);
     }
     
     return dealers;
@@ -59,15 +117,22 @@ export function generateSampleExcelFile() {
   
   // Sample data with header row and example dealers
   const sampleData = [
-    ['Company', 'Instructions'],
-    ['', 'Please keep this header information.'],
-    ['', 'Data should start from row 6 (after these instructions).'],
-    ['', ''],
-    ['Dealer Name', 'Amount'],
-    ['ABC Enterprises', 5000],
-    ['XYZ Corporation', 7500],
-    ['Sample Company', 3200],
-    ['Test Business', 10500],
+    ['Instructions'],
+    ['Use this template to import dealers into the system.'],
+    ['Column A: Dealer Name (required)'],
+    ['Column B: Phone Number (required)'],
+    ['Column C: Outstanding Amount in Rupees (₹) (optional - will be calculated from bill amounts if not provided)'],
+    ['Column D: Bill Number (required for each bill, e.g., INV-2023-001)'],
+    ['Column E: Bill Date (DD/MM/YYYY format, required for each bill)'],
+    ['Column F: Bill Amount (₹) (required for each bill)'],
+    ['Note: You can add multiple bills per dealer by repeating rows with the same dealer name and phone number'],
+    [''],
+    ['Dealer Name', 'Phone Number', 'Total Amount (Rs)', 'Bill Number', 'Bill Date', 'Bill Amount (Rs)'],
+    ['Example Dealer 1', '+1 (555) 123-4567', '₹5,000.00', 'INV-2023-001', '01/05/2023', '₹2,000.00'],
+    ['Example Dealer 1', '+1 (555) 123-4567', '', 'INV-2023-002', '15/05/2023', '₹3,000.00'],
+    ['Example Dealer 2', '+1 (555) 987-6543', '₹3,750.50', 'INV-2023-003', '10/06/2023', '₹3,750.50'],
+    ['Example Dealer 3', '+1 (555) 234-5678', '₹10,000.00', '', '', ''],
+    ['Example Without Bills', '+1 (555) 876-5432', '₹8,500.00', '', '', ''],
   ];
   
   // Create a worksheet
@@ -78,8 +143,12 @@ export function generateSampleExcelFile() {
   
   // Style the worksheet (bold header, etc.)
   if (!worksheet['!cols']) worksheet['!cols'] = [];
-  worksheet['!cols'][0] = { wch: 20 }; // Column A width
-  worksheet['!cols'][1] = { wch: 12 }; // Column B width
+  worksheet['!cols'][0] = { wch: 28 }; // Column A width - Dealer Name
+  worksheet['!cols'][1] = { wch: 22 }; // Column B width - Phone Number
+  worksheet['!cols'][2] = { wch: 20 }; // Column C width - Total Amount
+  worksheet['!cols'][3] = { wch: 20 }; // Column D width - Bill Number
+  worksheet['!cols'][4] = { wch: 15 }; // Column E width - Bill Date
+  worksheet['!cols'][5] = { wch: 20 }; // Column F width - Bill Amount
   
   // Write the workbook to a buffer
   const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });

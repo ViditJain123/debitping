@@ -1,9 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { FiPlus, FiTrash2, FiEdit2, FiCheck, FiX, FiSearch, FiUpload, FiMessageSquare } from 'react-icons/fi';
+import React, { useState, useEffect } from 'react';
+import { FiPlus, FiTrash2, FiEdit2, FiCheck, FiX, FiSearch, FiUpload, FiMessageSquare, FiChevronDown, FiChevronRight, FiDatabase } from 'react-icons/fi';
 import DealerForm from './DealerForm';
 import DealersFileUploader from './DealersFileUploader';
+import DealerBillsRow from './DealerBillsRow';
+import TallyIntegration from '../../../components/TallyIntegration';
 
 // Helper function for phone number formatting
 function formatE164PhoneNumber(phoneNumber) {
@@ -29,6 +31,8 @@ export default function DealersClient() {
   const [isLoading, setIsLoading] = useState(true);
   const [importSuccess, setImportSuccess] = useState(false);
   const [error, setError] = useState('');
+  const [activeTab, setActiveTab] = useState('dealers');
+  const [expandedDealerIds, setExpandedDealerIds] = useState([]);
   
   // Fetch dealers from the API
   const fetchDealers = async () => {
@@ -50,7 +54,8 @@ export default function DealersClient() {
         id: dealer._id,
         name: dealer.companyName,
         phone: dealer.phoneNumber,
-        outstandingAmount: dealer.amount || 0
+        outstandingAmount: dealer.amount || 0,
+        outstandingBills: dealer.outstandingBills || []
       }));
       
       setDealers(formattedDealers);
@@ -73,7 +78,8 @@ export default function DealersClient() {
       const dealerData = {
         companyName: newDealer.name,
         phoneNumber: newDealer.phone,
-        amount: newDealer.outstandingAmount
+        amount: newDealer.outstandingAmount,
+        outstandingBills: newDealer.outstandingBills || []
       };
       
       // Send request to create dealer
@@ -96,7 +102,8 @@ export default function DealersClient() {
         id: data.dealer._id,
         name: data.dealer.companyName,
         phone: data.dealer.phoneNumber,
-        outstandingAmount: data.dealer.amount
+        outstandingAmount: data.dealer.amount,
+        outstandingBills: data.dealer.outstandingBills || []
       }]);
       
       setIsAddingDealer(false);
@@ -118,6 +125,7 @@ export default function DealersClient() {
       if (updatedData.name) dealerData.companyName = updatedData.name;
       if (updatedData.phone) dealerData.phoneNumber = updatedData.phone;
       if (updatedData.outstandingAmount !== undefined) dealerData.amount = updatedData.outstandingAmount;
+      if (updatedData.outstandingBills) dealerData.outstandingBills = updatedData.outstandingBills;
       
       // Send request to update dealer
       const response = await fetch('/api/dealers', {
@@ -138,7 +146,8 @@ export default function DealersClient() {
           ...dealer, 
           name: updatedData.name || dealer.name,
           phone: updatedData.phone || dealer.phone,
-          outstandingAmount: updatedData.outstandingAmount !== undefined ? updatedData.outstandingAmount : dealer.outstandingAmount
+          outstandingAmount: updatedData.outstandingAmount !== undefined ? updatedData.outstandingAmount : dealer.outstandingAmount,
+          outstandingBills: updatedData.outstandingBills || dealer.outstandingBills
         } : dealer
       ));
       
@@ -181,6 +190,17 @@ export default function DealersClient() {
     setMessageDialogOpen(true);
   };
 
+  // Toggle expanded state for a dealer to show or hide outstanding bills
+  const toggleExpandDealer = (dealerId) => {
+    setExpandedDealerIds(prevIds => {
+      if (prevIds.includes(dealerId)) {
+        return prevIds.filter(id => id !== dealerId);
+      } else {
+        return [...prevIds, dealerId];
+      }
+    });
+  };
+
   const handleImportDealers = (importResult) => {
     if (!importResult || !importResult.dealers || importResult.dealers.length === 0) {
       return;
@@ -210,8 +230,8 @@ export default function DealersClient() {
   
   // Filter dealers based on search query
   const filteredDealers = sortedDealers.filter(dealer => 
-    dealer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    dealer.phone.includes(searchQuery)
+    dealer.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    dealer.phone?.includes(searchQuery)
   );
 
   return (
@@ -301,210 +321,270 @@ export default function DealersClient() {
         </div>
       )}
 
-      {/* Dealers List */}
+      {/* Main Content Tabs */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 border border-gray-100 dark:border-gray-700">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-3">
-          <h2 className="text-xl font-semibold">Dealers List</h2>
-          <div className="flex flex-col md:flex-row gap-3">
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <FiSearch className="text-gray-400" />
-              </div>
-              <input
-                type="text"
-                placeholder="Search dealers..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 pr-3 py-2 w-full border rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary"
-              />
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setIsImportDialogOpen(true)}
-                className="px-3 py-2 flex items-center text-sm font-medium text-white bg-secondary hover:bg-secondary-dark rounded-md transition-colors border border-secondary hover:border-secondary-dark shadow-sm hover:shadow cursor-pointer"
-              >
-                <FiUpload className="mr-1" />
-                Import
-              </button>
-              <button
-                onClick={() => setIsAddingDealer(true)}
-                className="px-3 py-2 flex items-center text-sm font-medium text-white bg-primary hover:bg-primary-dark rounded-md transition-colors border border-primary hover:border-primary-dark shadow-sm hover:shadow cursor-pointer"
-              >
-                <FiPlus className="mr-1" />
-                Add Dealer
-              </button>
-            </div>
+          <h2 className="text-xl font-semibold">Dealers Management</h2>
+          <div className="flex gap-3">
+            <button
+              onClick={() => setActiveTab('dealers')}
+              className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
+                activeTab === 'dealers'
+                  ? 'bg-primary text-white'
+                  : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+              }`}
+            >
+              Dealers List
+            </button>
+            <button
+              onClick={() => setActiveTab('tally')}
+              className={`px-3 py-1 text-sm font-medium rounded-md transition-colors flex items-center ${
+                activeTab === 'tally'
+                  ? 'bg-primary text-white'
+                  : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+              }`}
+            >
+              <FiDatabase className="mr-1" />
+              Tally Integration
+            </button>
           </div>
         </div>
 
-        {/* Success notification */}
-        {importSuccess && (
-          <div className="mb-4 p-3 bg-green-100 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-md">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <FiCheck className="h-5 w-5 text-green-500" />
+        {activeTab === 'tally' ? (
+          <TallyIntegration onSyncComplete={(result) => {
+            // Handle successful sync by refreshing dealers list
+            if (result && result.success) {
+              setImportSuccess(true);
+              fetchDealers();
+              
+              // Clear import success notification after 5 seconds
+              setTimeout(() => {
+                setImportSuccess(false);
+              }, 5000);
+            }
+          }} />
+        ) : (
+          <>
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-3">
+              <div className="relative flex-1 w-full md:max-w-md">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <FiSearch className="text-gray-400" />
+                </div>
+                <input
+                  type="text"
+                  placeholder="Search dealers..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 pr-3 py-2 w-full border rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary"
+                />
               </div>
-              <div className="ml-3">
-                <p className="text-sm font-medium text-green-800 dark:text-green-200">
-                  Dealers imported successfully! Your dealers list has been updated.
-                </p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setIsImportDialogOpen(true)}
+                  className="px-3 py-2 flex items-center text-sm font-medium text-white bg-secondary hover:bg-secondary-dark rounded-md transition-colors border border-secondary hover:border-secondary-dark shadow-sm hover:shadow cursor-pointer"
+                >
+                  <FiUpload className="mr-1" />
+                  Import
+                </button>
+                <button
+                  onClick={() => setIsAddingDealer(true)}
+                  className="px-3 py-2 flex items-center text-sm font-medium text-white bg-primary hover:bg-primary-dark rounded-md transition-colors border border-primary hover:border-primary-dark shadow-sm hover:shadow cursor-pointer"
+                >
+                  <FiPlus className="mr-1" />
+                  Add Dealer
+                </button>
               </div>
-              <div className="ml-auto pl-3">
-                <div className="-mx-1.5 -my-1.5">
-                  <button
-                    type="button"
-                    onClick={() => setImportSuccess(false)}
-                    className="inline-flex rounded-md p-1.5 text-green-500 hover:bg-green-200 dark:hover:bg-green-800/50 focus:outline-none"
-                  >
-                    <span className="sr-only">Dismiss</span>
-                    <FiX className="h-4 w-4" />
-                  </button>
+            </div>
+
+            {/* Success notification */}
+            {importSuccess && (
+              <div className="mb-4 p-3 bg-green-100 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-md">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <FiCheck className="h-5 w-5 text-green-500" />
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-sm font-medium text-green-800 dark:text-green-200">
+                      Dealers imported successfully! Your dealers list has been updated.
+                    </p>
+                  </div>
+                  <div className="ml-auto pl-3">
+                    <div className="-mx-1.5 -my-1.5">
+                      <button
+                        type="button"
+                        onClick={() => setImportSuccess(false)}
+                        className="inline-flex rounded-md p-1.5 text-green-500 hover:bg-green-200 dark:hover:bg-green-800/50 focus:outline-none"
+                      >
+                        <span className="sr-only">Dismiss</span>
+                        <FiX className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
-        )}
+            )}
 
-        {/* Loading state */}
-        {isLoading ? (
-          <div className="flex justify-center items-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-              <thead className="bg-gray-50 dark:bg-gray-800">
-                <tr>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Dealer Name
-                  </th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Phone Number
-                  </th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Outstanding Amount
-                  </th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                {filteredDealers.length > 0 ? (
-                  filteredDealers.map((dealer) => (
-                    <tr key={dealer.id} className={dealer.isNew ? "bg-green-50 dark:bg-green-900/10" : ""}>
-                      <td className="px-6 py-4 whitespace-nowrap text-center">
-                        {editingDealerId === dealer.id ? (
-                          <input
-                            type="text"
-                            className="w-full px-2 py-1 border rounded-md dark:bg-gray-700 dark:text-white text-center"
-                            defaultValue={dealer.name}
-                            id={`name-${dealer.id}`}
-                          />
-                        ) : (
-                          <div className="text-sm font-medium text-gray-900 dark:text-gray-100">{dealer.name}</div>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center">
-                        {editingDealerId === dealer.id ? (
-                          <div>
-                            <input
-                              type="text"
-                              className="w-full px-2 py-1 border rounded-md dark:bg-gray-700 dark:text-white text-center"
-                              defaultValue={dealer.phone}
-                              id={`phone-${dealer.id}`}
-                              placeholder="Phone"
-                            />
-                          </div>
-                        ) : (
-                          <div className="text-sm text-gray-500 dark:text-gray-400">{dealer.phone}</div>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center">
-                        {editingDealerId === dealer.id ? (
-                          <input
-                            type="number"
-                            className="w-full px-2 py-1 border rounded-md dark:bg-gray-700 dark:text-white text-center"
-                            defaultValue={dealer.outstandingAmount}
-                            id={`amount-${dealer.id}`}
-                          />
-                        ) : (
-                          <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                            ₹{dealer.outstandingAmount.toLocaleString('en-IN', { maximumFractionDigits: 2, minimumFractionDigits: 2 })}
-                          </div>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
-                        {editingDealerId === dealer.id ? (
-                          <div className="flex justify-center space-x-2">
-                            <button 
-                              onClick={() => {
-                                const name = document.getElementById(`name-${dealer.id}`).value;
-                                const phone = document.getElementById(`phone-${dealer.id}`).value;
-                                const formattedPhone = formatE164PhoneNumber(phone);
-                                const outstandingAmount = parseFloat(document.getElementById(`amount-${dealer.id}`).value);
-                                
-                                handleUpdateDealer(dealer.id, {
-                                  name, phone: formattedPhone, outstandingAmount
-                                });
-                              }}
-                              className="text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300 p-1 rounded-full hover:bg-green-100 dark:hover:bg-green-900/20 cursor-pointer"
-                            >
-                              <FiCheck className="w-5 h-5" />
-                            </button>
-                            <button 
-                              onClick={() => setEditingDealerId(null)}
-                              className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 p-1 rounded-full hover:bg-red-100 dark:hover:bg-red-900/20 cursor-pointer"
-                            >
-                              <FiX className="w-5 h-5" />
-                            </button>
-                          </div>
-                        ) : (
-                          <div className="flex justify-center space-x-2">
-                            <button 
-                              onClick={() => setEditingDealerId(dealer.id)}
-                              className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 p-1 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/20 cursor-pointer"
-                              title="Edit dealer"
-                            >
-                              <FiEdit2 className="w-5 h-5" />
-                            </button>
-                            <button 
-                              onClick={() => handleDeleteDealer(dealer.id)}
-                              className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 p-1 rounded-full hover:bg-red-100 dark:hover:bg-red-900/20 cursor-pointer"
-                              title="Delete dealer"
-                            >
-                              <FiTrash2 className="w-5 h-5" />
-                            </button>
-                            <button 
-                              onClick={() => handleSendMessage(dealer)}
-                              className="text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300 p-1 rounded-full hover:bg-green-100 dark:hover:bg-green-900/20 cursor-pointer"
-                              title="Send message"
-                            >
-                              <FiMessageSquare className="w-5 h-5" />
-                            </button>
-                          </div>
-                        )}
-                      </td>
+            {/* Loading state */}
+            {isLoading ? (
+              <div className="flex justify-center items-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                  <thead className="bg-gray-50 dark:bg-gray-800">
+                    <tr>
+                      <th className="px-2 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        Bills
+                      </th>
+                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        Dealer Name
+                      </th>
+                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        Phone Number
+                      </th>
+                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        Outstanding Amount
+                      </th>
+                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        Actions
+                      </th>
                     </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="4" className="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
-                      {searchQuery ? 'No dealers found matching your search.' : 'No dealers found. Add a dealer or import from Excel.'}
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        )}
+                  </thead>
+                  <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                    {filteredDealers.length > 0 ? (
+                      filteredDealers.map((dealer, index) => (
+                        <React.Fragment key={dealer.id || index}>
+                          <tr className={dealer.isNew ? "bg-green-50 dark:bg-green-900/10" : ""}>
+                            <td className="px-2 py-4 text-center">
+                              <button 
+                                onClick={() => toggleExpandDealer(dealer.id)}
+                                className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
+                              >
+                                {expandedDealerIds.includes(dealer.id) ? 
+                                  <FiChevronDown className="w-5 h-5 text-gray-500" /> : 
+                                  <FiChevronRight className="w-5 h-5 text-gray-500" />
+                                }
+                              </button>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-center">
+                              {editingDealerId === dealer.id ? (
+                                <input
+                                  type="text"
+                                  className="w-full px-2 py-1 border rounded-md dark:bg-gray-700 dark:text-white text-center"
+                                  defaultValue={dealer.name}
+                                  id={`name-${dealer.id}`}
+                                />
+                              ) : (
+                                <div className="text-sm font-medium text-gray-900 dark:text-gray-100">{dealer.name}</div>
+                              )}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-center">
+                              {editingDealerId === dealer.id ? (
+                                <div>
+                                  <input
+                                    type="text"
+                                    className="w-full px-2 py-1 border rounded-md dark:bg-gray-700 dark:text-white text-center"
+                                    defaultValue={dealer.phone}
+                                    id={`phone-${dealer.id}`}
+                                    placeholder="Phone"
+                                  />
+                                </div>
+                              ) : (
+                                <div className="text-sm text-gray-500 dark:text-gray-400">{dealer.phone}</div>
+                              )}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-center">
+                              {editingDealerId === dealer.id ? (
+                                <input
+                                  type="number"
+                                  className="w-full px-2 py-1 border rounded-md dark:bg-gray-700 dark:text-white text-center"
+                                  defaultValue={dealer.outstandingAmount}
+                                  id={`amount-${dealer.id}`}
+                                />
+                              ) : (
+                                <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                  ₹{dealer.outstandingAmount.toLocaleString('en-IN', { maximumFractionDigits: 2, minimumFractionDigits: 2 })}
+                                </div>
+                              )}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
+                              {editingDealerId === dealer.id ? (
+                                <div className="flex justify-center space-x-2">
+                                  <button 
+                                    onClick={() => {
+                                      const name = document.getElementById(`name-${dealer.id}`).value;
+                                      const phone = document.getElementById(`phone-${dealer.id}`).value;
+                                      const formattedPhone = formatE164PhoneNumber(phone);
+                                      const outstandingAmount = parseFloat(document.getElementById(`amount-${dealer.id}`).value);
+                                      
+                                      handleUpdateDealer(dealer.id, {
+                                        name, phone: formattedPhone, outstandingAmount
+                                      });
+                                    }}
+                                    className="text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300 p-1 rounded-full hover:bg-green-100 dark:hover:bg-green-900/20 cursor-pointer"
+                                  >
+                                    <FiCheck className="w-5 h-5" />
+                                  </button>
+                                  <button 
+                                    onClick={() => setEditingDealerId(null)}
+                                    className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 p-1 rounded-full hover:bg-red-100 dark:hover:bg-red-900/20 cursor-pointer"
+                                  >
+                                    <FiX className="w-5 h-5" />
+                                  </button>
+                                </div>
+                              ) : (
+                                <div className="flex justify-center space-x-2">
+                                  <button 
+                                    onClick={() => setEditingDealerId(dealer.id)}
+                                    className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 p-1 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/20 cursor-pointer"
+                                    title="Edit dealer"
+                                  >
+                                    <FiEdit2 className="w-5 h-5" />
+                                  </button>
+                                  <button 
+                                    onClick={() => handleDeleteDealer(dealer.id)}
+                                    className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 p-1 rounded-full hover:bg-red-100 dark:hover:bg-red-900/20 cursor-pointer"
+                                    title="Delete dealer"
+                                  >
+                                    <FiTrash2 className="w-5 h-5" />
+                                  </button>
+                                  <button 
+                                    onClick={() => handleSendMessage(dealer)}
+                                    className="text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300 p-1 rounded-full hover:bg-green-100 dark:hover:bg-green-900/20 cursor-pointer"
+                                    title="Send message"
+                                  >
+                                    <FiMessageSquare className="w-5 h-5" />
+                                  </button>
+                                </div>
+                              )}
+                            </td>
+                          </tr>
+                          {expandedDealerIds.includes(dealer.id) && (
+                            <DealerBillsRow bills={dealer.outstandingBills} />
+                          )}
+                        </React.Fragment>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="5" className="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
+                          {searchQuery ? 'No dealers found matching your search.' : 'No dealers found. Add a dealer or import from Excel.'}
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
 
-        {filteredDealers.length > 0 && (
-          <div className="py-3 px-6 border-t border-gray-200 dark:border-gray-700 flex justify-between items-center text-sm text-gray-500 dark:text-gray-400">
-            <div>
-              Showing {filteredDealers.length} of {dealers.length} dealers
-            </div>
-          </div>
+            {filteredDealers.length > 0 && (
+              <div className="py-3 px-6 border-t border-gray-200 dark:border-gray-700 flex justify-between items-center text-sm text-gray-500 dark:text-gray-400">
+                <div>
+                  Showing {filteredDealers.length} of {dealers.length} dealers
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
 

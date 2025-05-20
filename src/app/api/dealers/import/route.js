@@ -33,6 +33,7 @@ export async function POST(request) {
     
     // Extract dealer data - looking for name in column A and phone in column B
     const dealersData = [];
+    const dealerMap = new Map(); // Map to group dealers by name and phone
     
     // Skip header rows - start from row 7 in typical template
     // But still check all rows to be flexible with different file formats
@@ -49,15 +50,65 @@ export async function POST(request) {
       // Skip if missing required fields
       if (!name || !phone) continue;
       
-      dealersData.push({
-        companyName: name,
-        phoneNumber: phone,
-        // Amount is optional - if present in column C, use it, otherwise set to 0
-        // Clean amount string if it has rupee symbol or formatting
-        amount: row.C ? (typeof row.C === 'string' ? 
-          parseFloat(row.C.replace(/[₹,\s]/g, '')) || 0 : 
-          parseFloat(row.C) || 0) : 0
-      });
+      // Clean amount string if it has rupee symbol or formatting
+      const totalAmount = row.C ? (typeof row.C === 'string' ? 
+        parseFloat(row.C.replace(/[₹,\s]/g, '')) || 0 : 
+        parseFloat(row.C) || 0) : 0;
+      
+      // Process bill data if available
+      const billNumber = row.D ? row.D.toString().trim() : '';
+      let billDate = null;
+      
+      // Process bill date - convert from DD/MM/YYYY format
+      if (row.E) {
+        try {
+          // Check if it's already a date object
+          if (row.E instanceof Date) {
+            billDate = row.E;
+          } else {
+            // Parse string date in DD/MM/YYYY format
+            const parts = row.E.toString().split('/');
+            if (parts.length === 3) {
+              // Note: Month is 0-indexed in JavaScript Date
+              billDate = new Date(parts[2], parts[1] - 1, parts[0]);
+            }
+          }
+        } catch (error) {
+          console.error(`Error parsing date ${row.E}:`, error);
+        }
+      }
+      
+      // Process bill amount
+      const billAmount = row.F ? (typeof row.F === 'string' ? 
+        parseFloat(row.F.replace(/[₹,\s]/g, '')) || 0 : 
+        parseFloat(row.F) || 0) : 0;
+      
+      // Create unique key for dealer
+      const dealerKey = `${name.toLowerCase()}:::${phone}`;
+      
+      // Get or create dealer in map
+      if (!dealerMap.has(dealerKey)) {
+        dealerMap.set(dealerKey, {
+          companyName: name,
+          phoneNumber: phone,
+          amount: totalAmount,
+          outstandingBills: []
+        });
+      }
+      
+      // Add bill if details available
+      if (billNumber && billDate && billAmount > 0) {
+        dealerMap.get(dealerKey).outstandingBills.push({
+          billNumber,
+          billDate,
+          billAmount
+        });
+      }
+    }
+    
+    // Convert map to array
+    for (const dealer of dealerMap.values()) {
+      dealersData.push(dealer);
     }
     
     if (!dealersData || dealersData.length === 0) {
@@ -86,13 +137,44 @@ export async function POST(request) {
           dealer => dealer.companyName.toLowerCase() === dealerData.companyName.toLowerCase()
         );
         
-        // If dealer exists, update phone if needed
+        // If dealer exists, update as needed
         if (existingDealer) {
-          // Only update if phone changed
+          // Prepare update data
+          const updateData = {};
+          
+          // Update phone if changed
           if (existingDealer.phoneNumber !== dealerData.phoneNumber) {
+            updateData.phoneNumber = dealerData.phoneNumber;
+          }
+          
+          // Update amount if provided
+          if (dealerData.amount && existingDealer.amount !== dealerData.amount) {
+            updateData.amount = dealerData.amount;
+          }
+          
+          // Update outstanding bills if provided
+          if (dealerData.outstandingBills && dealerData.outstandingBills.length > 0) {
+            // Merge with existing bills or replace completely
+            // Option 1: Replace all bills
+            // updateData.outstandingBills = dealerData.outstandingBills;
+            
+            // Option 2: Merge with existing bills (avoiding duplicates by bill number)
+            const existingBills = existingDealer.outstandingBills || [];
+            const existingBillNumbers = new Set(existingBills.map(bill => bill.billNumber));
+            
+            // Filter out new bills that have the same bill number as existing ones
+            const newBills = dealerData.outstandingBills.filter(
+              bill => !existingBillNumbers.has(bill.billNumber)
+            );
+            
+            updateData.outstandingBills = [...existingBills, ...newBills];
+          }
+          
+          // Only update if there are changes to make
+          if (Object.keys(updateData).length > 0) {
             await updateDealer(
               existingDealer._id,
-              { phoneNumber: dealerData.phoneNumber },
+              updateData,
               userId
             );
             results.updated++;
@@ -101,22 +183,31 @@ export async function POST(request) {
             results.updated++;
           }
           
+          // Get the updated dealer data
+          const updatedDealer = await updateDealer(
+            existingDealer._id,
+            {}, // Empty update to get the latest dealer data
+            userId
+          );
+          
           results.dealers.push({
-            id: existingDealer._id,
-            name: existingDealer.companyName,
-            phone: existingDealer.phoneNumber,
-            amount: existingDealer.amount,
+            id: updatedDealer._id,
+            name: updatedDealer.companyName,
+            phone: updatedDealer.phoneNumber,
+            amount: updatedDealer.amount,
+            outstandingBills: updatedDealer.outstandingBills || [],
             isNew: false
           });
           continue;
         }
         
-        // Create a new dealer - use amount if provided, otherwise 0
+        // Create a new dealer - include outstanding bills data
         const dealer = await createDealer(
           { 
             companyName: dealerData.companyName, 
             phoneNumber: dealerData.phoneNumber, 
-            amount: dealerData.amount || 0
+            amount: dealerData.amount || 0,
+            outstandingBills: dealerData.outstandingBills || []
           }, 
           userId
         );
@@ -127,6 +218,7 @@ export async function POST(request) {
           name: dealer.companyName,
           phone: dealer.phoneNumber,
           amount: dealer.amount,
+          outstandingBills: dealer.outstandingBills || [],
           isNew: true
         });
       } catch (error) {

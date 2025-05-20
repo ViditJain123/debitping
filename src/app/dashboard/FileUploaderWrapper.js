@@ -25,7 +25,7 @@ export default function FileUploaderWrapper() {
           </Link>
         </div>
         <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-          Upload an Excel file with dealer names in column A, phone numbers in column B, and outstanding amounts in rupees (₹) in column C
+          Upload an Excel file with dealer names in column A, phone numbers in column B, outstanding amounts in rupees (₹) in column C, and bill details (number, date, amount) in columns D, E, and F
         </p>
       </div>
       

@@ -197,8 +197,9 @@ export default async function DashboardPage() {
           <div className="mb-6 bg-white/70 dark:bg-gray-800/70 rounded-lg shadow-sm p-4 border border-gray-100/50 dark:border-gray-700/50 backdrop-blur-lg">
             <h2 className="text-xl font-semibold mb-3">Upload Your Dealer Data</h2>
             <p className="text-sm text-gray-500 mb-4">
-              Upload your Excel file with dealer names in column A, phone numbers in column B, and outstanding amounts in rupees (₹) in column C.
-              The system will automatically create new dealers or update existing ones.
+              Upload your Excel file with dealer names in column A, phone numbers in column B, outstanding amounts in column C,
+              and bill details (bill number, bill date, bill amount) in columns D, E, and F.
+              The system will automatically create new dealers or update existing ones with their complete bill information.
             </p>
             <Suspense fallback={<div>Loading uploader...</div>}>
               <FileUploaderWrapper />

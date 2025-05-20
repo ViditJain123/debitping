@@ -3,6 +3,8 @@
 import { usePathname } from 'next/navigation';
 import { useState, useEffect, Suspense } from 'react';
 import DashboardLoadingSpinner from './DashboardLoadingSpinner';
+import ExtensionCheckDialog from './ExtensionCheckDialog';
+import ManualExtensionReset from './ManualExtensionReset';
 
 export default function DashboardClientWrapper({ children }) {
   const pathname = usePathname();
@@ -37,6 +39,8 @@ export default function DashboardClientWrapper({ children }) {
       <Suspense fallback={<div>Loading dashboard...</div>}>
         <DashboardLoadingSpinner />
       </Suspense>
+      <ExtensionCheckDialog />
+      <ManualExtensionReset />
       {children}
     </>
   );

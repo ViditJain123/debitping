@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getAuth } from '@clerk/nextjs/server';
-import { sendWhatsAppMessage, createOutstandingPaymentMessage, logMessageSent } from '../../../../utils/twilio';
+import { sendWhatsAppMessage as sendTwilioWhatsAppMessage, createOutstandingPaymentMessage, logMessageSent } from '../../../../utils/twilio';
+import metaWhatsAppService from '../../../../utils/meta-whatsapp';
 import { getUserById } from '../../../../utils/user';
 import { getDealerById } from '../../../../utils/dealer';
 
@@ -17,7 +18,7 @@ export async function POST(request) {
     }
     
     // Get message data from request body
-    const { dealerIds, customMessage } = await request.json();
+    const { dealerIds, customMessage, provider = 'twilio' } = await request.json();
     
     if (!dealerIds || !Array.isArray(dealerIds) || dealerIds.length === 0) {
       return NextResponse.json(
@@ -57,18 +58,49 @@ export async function POST(request) {
           distributorName
         );
         
-        // Send the WhatsApp message
-        const messageSent = await sendWhatsAppMessage(dealer.phoneNumber, message);
+        // Send the WhatsApp message based on selected provider
+        let messageSent;
         
-        // Log the message in the database
-        await logMessageSent(dealerId, message, messageSent.sid, userId);
-        
-        results.push({
-          dealerId,
-          dealerName: dealer.companyName,
-          success: true,
-          messageId: messageSent.sid
-        });
+        if (provider === 'meta') {
+          // Send via Meta WhatsApp Business Platform
+          messageSent = await metaWhatsAppService.sendTextMessage(dealer.phoneNumber, message);
+          
+          // Log the message in the database
+          await logMessageInDatabase(
+            dealerId, 
+            message, 
+            messageSent.messages[0].id, 
+            userId,
+            'meta'
+          );
+          
+          results.push({
+            dealerId,
+            dealerName: dealer.companyName,
+            success: true,
+            messageId: messageSent.messages[0].id,
+            provider: 'meta'
+          });
+        } else {
+          // Default: Send via Twilio
+          messageSent = await sendTwilioWhatsAppMessage(dealer.phoneNumber, message);
+          
+          // Log the message in the database
+          await logMessageSent(
+            dealerId, 
+            message, 
+            messageSent.sid, 
+            userId
+          );
+          
+          results.push({
+            dealerId,
+            dealerName: dealer.companyName,
+            success: true,
+            messageId: messageSent.sid,
+            provider: 'twilio'
+          });
+        }
         
         successCount++;
       } catch (error) {
@@ -77,7 +109,8 @@ export async function POST(request) {
         results.push({
           dealerId,
           success: false,
-          error: error.message || 'Failed to send message'
+          error: error.message || 'Failed to send message',
+          provider: provider
         });
         
         failureCount++;
@@ -96,5 +129,35 @@ export async function POST(request) {
       { error: error.message || 'Failed to send messages' },
       { status: 500 }
     );
+  }
+}
+
+/**
+ * Log a sent message to the database
+ * @param {string} dealerId - The dealer ID
+ * @param {string} messageContent - The content of the message
+ * @param {string} messageId - The message ID from the provider
+ * @param {string} userId - The user ID who sent the message
+ * @param {string} provider - The message provider (twilio or meta)
+ */
+async function logMessageInDatabase(dealerId, messageContent, messageId, userId, provider = 'twilio') {
+  try {
+    // Import here to avoid circular dependencies
+    const { db } = await import('../../../../utils/db');
+    
+    await db.message.create({
+      data: {
+        content: messageContent,
+        providerId: messageId,
+        provider: provider,
+        userId: userId,
+        dealerId: dealerId,
+        status: 'sent',
+        sentAt: new Date(),
+      },
+    });
+  } catch (error) {
+    console.error(`Error logging ${provider} message:`, error);
+    // Don't throw error to avoid breaking the message flow
   }
 }

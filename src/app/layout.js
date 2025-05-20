@@ -10,7 +10,7 @@ import { Geist, Geist_Mono } from 'next/font/google'
 import { Suspense } from 'react'
 import './globals.css'
 import LoadingProvider from '../components/LoadingProvider'
-import FacebookSDKScript from '../components/FacebookSDKScript'
+import Script from 'next/script'
 
 
 
@@ -36,12 +36,16 @@ export default function RootLayout({ children }) {
   return (
     <ClerkProvider>
       <html lang="en" className="scroll-smooth">
+        <head>
+          <Script 
+            id="extension-detection-helper" 
+            strategy="beforeInteractive"
+            src="/extension-detection.js" 
+          />
+        </head>
         <body
           className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         >
-          {/* Facebook SDK */}
-          <FacebookSDKScript />
-          
           <Suspense fallback={<div className="fixed top-0 left-0 right-0 z-[9999] h-1 bg-gray-200 dark:bg-gray-800">
             <div className="h-full bg-gradient-to-r from-primary to-secondary animate-loading-bar"></div>
           </div>}>

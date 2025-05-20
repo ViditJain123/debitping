@@ -13,6 +13,7 @@ export default function MessageClient() {
   const [success, setSuccess] = useState(null);
   const [showCustomMessage, setShowCustomMessage] = useState(false);
   const [customMessage, setCustomMessage] = useState('');
+  const [provider, setProvider] = useState('twilio'); // Default to Twilio
   
   // Fetch dealers from the API
   const fetchDealers = async () => {
@@ -96,7 +97,8 @@ export default function MessageClient() {
         },
         body: JSON.stringify({
           dealerIds: selectedDealers,
-          customMessage: showCustomMessage ? customMessage : undefined
+          customMessage: showCustomMessage ? customMessage : undefined,
+          provider: provider // Add the provider to the payload
         }),
       });
       
@@ -300,6 +302,59 @@ export default function MessageClient() {
               )}
             </div>
 
+            <div className="mb-6 mt-4">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Select WhatsApp Provider
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div 
+                  className={`border rounded-md p-3 cursor-pointer transition-colors ${
+                    provider === 'twilio' 
+                      ? 'border-primary bg-primary/5 dark:bg-primary/10' 
+                      : 'border-gray-200 dark:border-gray-700 hover:border-primary/50'
+                  }`}
+                  onClick={() => setProvider('twilio')}
+                >
+                  <div className="flex items-center">
+                    <div className={`w-4 h-4 rounded-full mr-2 border ${
+                      provider === 'twilio' ? 'border-primary bg-primary' : 'border-gray-400'
+                    }`}>
+                      {provider === 'twilio' && (
+                        <FiCheck className="h-3 w-3 text-white" />
+                      )}
+                    </div>
+                    <span className="font-medium">Twilio WhatsApp</span>
+                  </div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 ml-6">
+                    Using Twilio WhatsApp Business API Integration
+                  </p>
+                </div>
+                
+                <div 
+                  className={`border rounded-md p-3 cursor-pointer transition-colors ${
+                    provider === 'meta' 
+                      ? 'border-green-600 bg-green-50 dark:bg-green-900/20' 
+                      : 'border-gray-200 dark:border-gray-700 hover:border-green-600/50'
+                  }`}
+                  onClick={() => setProvider('meta')}
+                >
+                  <div className="flex items-center">
+                    <div className={`w-4 h-4 rounded-full mr-2 border ${
+                      provider === 'meta' ? 'border-green-600 bg-green-600' : 'border-gray-400'
+                    }`}>
+                      {provider === 'meta' && (
+                        <FiCheck className="h-3 w-3 text-white" />
+                      )}
+                    </div>
+                    <span className="font-medium">Meta WhatsApp</span>
+                  </div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 ml-6">
+                    Using Meta WhatsApp Business Platform (Direct Integration)
+                  </p>
+                </div>
+              </div>
+            </div>
+
             <div className="overflow-x-auto mb-4">
               <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                 <thead className="bg-gray-50 dark:bg-gray-800">
@@ -371,7 +426,7 @@ export default function MessageClient() {
                 )}
               </button>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                Messages will be sent using WhatsApp Business API via Twilio
+                Messages will be sent using WhatsApp Business {provider === 'meta' ? 'Platform via Meta' : 'API via Twilio'}
               </p>
             </div>
           </>

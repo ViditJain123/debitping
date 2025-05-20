@@ -20,6 +20,23 @@ const dealerSchema = new mongoose.Schema(
       required: true,
       // References the clerkId in the User schema
     },
+    outstandingBills: {
+      type: [{
+        billNumber: {
+          type: String,
+          required: true
+        },
+        billDate: {
+          type: Date,
+          required: true
+        },
+        billAmount: {
+          type: Number,
+          required: true
+        }
+      }],
+      default: []
+    },
     lastMessageReceived: {
       type: String,
       default: '',

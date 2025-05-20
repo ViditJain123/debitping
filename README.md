@@ -57,9 +57,47 @@ This project uses [Clerk](https://clerk.dev) for user authentication integrated 
    
    # Clerk Webhook (optional, for sync)
    CLERK_WEBHOOK_SECRET=your_webhook_secret
+   
+   # Twilio WhatsApp Integration
+   TWILIO_ACCOUNT_SID=your_twilio_account_sid
+   TWILIO_AUTH_TOKEN=your_twilio_auth_token
+   TWILIO_WHATSAPP_NUMBER=your_twilio_whatsapp_number
    ```
 
 5. **Webhooks**: The application includes webhook handlers to keep the database in sync with Clerk user events (created, updated, deleted).
+
+## WhatsApp Integration with Twilio
+
+This application uses Twilio's WhatsApp API for sending automated payment reminders:
+
+1. **Setup Twilio Account**: 
+   - Create a Twilio account at [twilio.com](https://www.twilio.com)
+   - Enable WhatsApp in your Twilio console
+   - Obtain your Account SID, Auth Token, and WhatsApp-enabled phone number
+
+2. **Environment Variables**:
+   Add your Twilio credentials to `.env.local`:
+   ```
+   TWILIO_ACCOUNT_SID=your_account_sid
+   TWILIO_AUTH_TOKEN=your_auth_token
+   TWILIO_WHATSAPP_NUMBER=your_whatsapp_number
+   ```
+
+3. **Testing WhatsApp Messages**:
+   - In development/sandbox mode, recipients must join your Twilio sandbox
+   - Follow the instructions in the Twilio console to have recipients send a specific code to your Twilio number
+
+4. **Production Usage**:
+   - Apply for production access through Twilio
+   - Follow Twilio's requirements for business verification and WhatsApp Business API approval
+
+5. **Message Templates**:
+   - For production, pre-approved message templates are required
+   - Follow WhatsApp's guidelines for message template approval
+
+6. **Debugging**:
+   - Use the Twilio console to monitor message status and delivery reports
+   - Check the dashboard logs for any errors in message delivery
 
 ## Deploy on Vercel
 

@@ -55,7 +55,14 @@ window.addEventListener('message', function(event) {
 });
 
 // Helper for extension detection
-window.detectTallyExtension = function(callback, timeoutMs = 1000) {
+window.detectTallyExtension = function(callback, timeoutMs = 3000) {
+  // If already detected, immediately call back
+  if (window.__tallyExtensionDetected) {
+    console.log('Extension already detected via global flag');
+    setTimeout(() => callback(true, { source: 'global_flag' }), 0);
+    return 'already_detected';
+  }
+  
   // Initialize callbacks store if needed
   if (!window.__tallyDetectCallbacks) {
     window.__tallyDetectCallbacks = {};
@@ -64,8 +71,11 @@ window.detectTallyExtension = function(callback, timeoutMs = 1000) {
   // Generate a unique ID for this detection request
   const detectId = 'detect_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
   
+  console.log('Starting extension detection with ID:', detectId);
+  
   // Set up timeout
   const timeoutId = setTimeout(() => {
+    console.log('Extension detection timed out for ID:', detectId);
     if (window.__tallyDetectCallbacks[detectId]) {
       window.__tallyDetectCallbacks[detectId](false, { error: 'Detection timed out' });
       delete window.__tallyDetectCallbacks[detectId];
@@ -74,6 +84,7 @@ window.detectTallyExtension = function(callback, timeoutMs = 1000) {
   
   // Store callback with timeout cleanup
   window.__tallyDetectCallbacks[detectId] = (detected, data) => {
+    console.log('Detection callback triggered, detected:', detected);
     clearTimeout(timeoutId);
     callback(detected, data);
   };

@@ -13,6 +13,9 @@ script.onload = function() {
     extensionId: chrome.runtime.id,
     timestamp: new Date().toISOString()
   }, '*');
+  
+  // Explicitly log to console for debugging
+  console.log('Tally CORS Bridge extension injected and ready:', chrome.runtime.id);
 };
 
 // Listen for messages from the page
@@ -22,16 +25,31 @@ window.addEventListener('message', function(event) {
 
   // Handle detection ping
   if (event.data.type === 'TALLY_EXTENSION_DETECT') {
+    console.log('Extension detection requested with ID:', event.data.id);
+    
+    // Immediately respond to the page
     window.postMessage({
       type: 'TALLY_EXTENSION_DETECTED',
       id: event.data.id,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      source: 'content_script'
     }, '*');
     
     // Also forward to background script for more complete detection
     chrome.runtime.sendMessage(
       { action: "ping" },
       function(response) {
+        // Check if we got a response from the background
+        if (chrome.runtime.lastError) {
+          console.error('Background script error:', chrome.runtime.lastError);
+          window.postMessage({
+            type: 'TALLY_EXTENSION_BACKGROUND_ERROR',
+            id: event.data.id,
+            error: chrome.runtime.lastError
+          }, '*');
+          return;
+        }
+        
         window.postMessage({
           type: 'TALLY_EXTENSION_BACKGROUND_RESPONSE',
           id: event.data.id,
@@ -45,9 +63,39 @@ window.addEventListener('message', function(event) {
   if (event.data.type === 'TALLY_API_REQUEST') {
     // Get the current extension configuration
     chrome.runtime.sendMessage({action: "getConfig"}, function(response) {
+      // Check for runtime errors
+      if (chrome.runtime.lastError) {
+        console.error('Background script error:', chrome.runtime.lastError);
+        window.postMessage({
+          type: 'TALLY_API_RESPONSE',
+          id: event.data.id,
+          error: {
+            message: 'Failed to get configuration: ' + chrome.runtime.lastError.message,
+            type: 'EXTENSION_ERROR',
+            details: { error: chrome.runtime.lastError }
+          }
+        }, '*');
+        return;
+      }
+      
+      // Check if we got a valid response with config
+      if (!response || !response.config) {
+        console.error('Invalid config response:', response);
+        window.postMessage({
+          type: 'TALLY_API_RESPONSE',
+          id: event.data.id,
+          error: {
+            message: 'Invalid extension configuration',
+            type: 'EXTENSION_CONFIG_ERROR',
+            details: { response }
+          }
+        }, '*');
+        return;
+      }
+      
       const config = response.config;
       
-      if (!config || !config.enabled) {
+      if (!config.enabled) {
         window.postMessage({
           type: 'TALLY_API_RESPONSE',
           id: event.data.id,
@@ -59,6 +107,8 @@ window.addEventListener('message', function(event) {
         }, '*');
         return;
       }
+      
+      console.log('Making request to Tally at:', config.tallyEndpoint);
       
       // Make the request to Tally
       fetch(config.tallyEndpoint, {
@@ -84,6 +134,7 @@ window.addEventListener('message', function(event) {
         return response.text();
       })
       .then(data => {
+        console.log('Received successful response from Tally');
         window.postMessage({
           type: 'TALLY_API_RESPONSE',
           id: event.data.id,

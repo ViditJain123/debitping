@@ -1,5 +1,5 @@
 const DEFAULT_CONFIG = { enabled: true, endpoint: "http://localhost:9000" };
-const PING_XML = `<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<ENVELOPE>\n <HEADER>\n  <VERSION>1</VERSION>\n  <TALLYREQUEST>Export</TALLYREQUEST>\n  <TYPE>Data</TYPE>\n  <ID>List of Companies</ID>\n </HEADER>\n <BODY/>\n</ENVELOPE>`;
+const PING_XML = `<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<ENVELOPE>\n <HEADER>\n  <VERSION>1</VERSION>\n  <TALLYREQUEST>Export</TALLYREQUEST>\n  <TYPE>Collection</TYPE>\n  <ID>CompanyList</ID>\n </HEADER>\n <BODY>\n  <DESC>\n   <STATICVARIABLES>\n    <SVEXPORTFORMAT>$$SysName:XML</SVEXPORTFORMAT>\n   </STATICVARIABLES>\n   <TDL>\n    <TDLMESSAGE>\n     <COLLECTION NAME="CompanyList" ISMODIFY="No">\n      <TYPE>Company</TYPE>\n      <NATIVEMETHOD>Name</NATIVEMETHOD>\n      <NATIVEMETHOD>StartingFrom</NATIVEMETHOD>\n     </COLLECTION>\n    </TDLMESSAGE>\n   </TDL>\n  </DESC>\n </BODY>\n</ENVELOPE>`;
 
 chrome.runtime.onInstalled.addListener(async () => {
   const { tallyConfig } = await chrome.storage.local.get("tallyConfig");

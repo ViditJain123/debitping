@@ -3,7 +3,7 @@
   "name": "Tally CORS Bridge",
   "description": "Bypass CORS restrictions for Tally XML‑HTTP API running on localhost.",
   "version": "2.0.0",
-  "icons": { "128": "icons/icon.png" },
+  "icons": { "128": "icons/icon.svg" },
   "permissions": ["storage"],
   "host_permissions": ["http://localhost:9000/"],
   "background": {

@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Tally Connection Diagnostic Tool</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      line-height: 1.5;
+    }
+    h1, h2, h3 {
+      color: #333;
+    }
+    .card {
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      padding: 16px;
+      margin-bottom: 16px;
+      background-color: #f9f9f9;
+    }
+    .success {
+      background-color: #e6ffed;
+      border-color: #b4d6b4;
+    }
+    .error {
+      background-color: #ffebe9;
+      border-color: #ffbdbd;
+    }
+    .warning {
+      background-color: #fff8e6;
+      border-color: #ffe0a6;
+    }
+    button {
+      background-color: #0070f3;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      margin-right: 8px;
+    }
+    button:hover {
+      background-color: #0051cc;
+    }
+    pre {
+      background-color: #f6f8fa;
+      border-radius: 4px;
+      padding: 10px;
+      overflow: auto;
+    }
+    .logs {
+      height: 200px;
+      overflow-y: auto;
+    }
+    .test-item {
+      margin-bottom: 10px;
+      padding: 8px;
+      border-radius: 4px;
+      border-left: 4px solid #ddd;
+    }
+    .test-pass {
+      border-left-color: #28a745;
+      background-color: rgba(40, 167, 69, 0.05);
+    }
+    .test-fail {
+      border-left-color: #dc3545;
+      background-color: rgba(220, 53, 69, 0.05);
+    }
+    .test-pending {
+      border-left-color: #ffc107;
+      background-color: rgba(255, 193, 7, 0.05);
+    }
+    .detailed-logs {
+      margin-top: 10px;
+      font-family: monospace;
+      font-size: 12px;
+      color: #666;
+    }
+    .detailed-logs span.time {
+      color: #888;
+    }
+    .detailed-logs span.error {
+      color: #dc3545;
+    }
+    .detailed-logs span.success {
+      color: #28a745;
+    }
+  </style>
+</head>
+<body>
+  <h1>Tally Connection Diagnostic Tool</h1>
+  
+  <section class="card">
+    <h2>Current Settings</h2>
+    <div id="current-settings">Loading...</div>
+  </section>
+  
+  <section class="card">
+    <h2>Connection Tests</h2>
+    <div>
+      <button id="runTests">Run All Tests</button>
+      <button id="testTallyEndpoint">Test Tally Endpoint</button>
+      <button id="testExtensionDetection">Test Extension Detection</button>
+      <button id="testSimpleAPICall">Test Simple API Call</button>
+    </div>
+    <div id="test-results"></div>
+  </section>
+  
+  <section class="card">
+    <h2>Diagnostic Information</h2>
+    <div id="diagnostic-info"></div>
+  </section>
+  
+  <section class="card">
+    <h2>Detailed Logs</h2>
+    <div class="logs" id="logs"></div>
+  </section>
+  
+  <section class="card">
+    <h2>Troubleshooting Steps</h2>
+    <ol>
+      <li><strong>Verify Tally is running and configured correctly</strong>
+        <ul>
+          <li>Ensure Tally is running</li>
+          <li>In Tally, press F12 > Advanced Configuration</li>
+          <li>Set "Allow XML HTTP Interface" to "Yes"</li>
+          <li>Set "Allow Local TDL Server" to "Yes"</li>
+        </ul>
+      </li>
+      <li><strong>Check your network/firewall</strong>
+        <ul>
+          <li>Make sure port 9000 is not blocked by your firewall</li>
+          <li>Add exceptions for Tally and Chrome in your security software</li>
+        </ul>
+      </li>
+      <li><strong>Ensure extension is properly installed</strong>
+        <ul>
+          <li>Go to chrome://extensions</li>
+          <li>Make sure this extension is enabled</li>
+          <li>Try removing and reinstalling the extension</li>
+        </ul>
+      </li>
+      <li><strong>Restart everything</strong>
+        <ul>
+          <li>Close and restart Chrome</li>
+          <li>Restart Tally</li>
+          <li>Restart your computer</li>
+        </ul>
+      </li>
+    </ol>
+  </section>
+
+  <script>
+    // Utility for logging
+    const logger = {
+      log: function(message, type = 'info') {
+        const logElement = document.getElementById('logs');
+        const time = new Date().toLocaleTimeString();
+        const logEntry = document.createElement('div');
+        logEntry.className = 'detailed-logs';
+        
+        logEntry.innerHTML = `<span class="time">[${time}]</span> <span class="${type}">${message}</span>`;
+        logElement.appendChild(logEntry);
+        logElement.scrollTop = logElement.scrollHeight;
+        
+        console.log(`[${type.toUpperCase()}] ${message}`);
+      },
+      clear: function() {
+        document.getElementById('logs').innerHTML = '';
+      }
+    };
+    
+    // Test functions
+    const diagnostics = {
+      testTallyEndpoint: async function() {
+        logger.log('Testing Tally endpoint connection...', 'info');
+        
+        const testItem = document.createElement('div');
+        testItem.className = 'test-item test-pending';
+        testItem.innerHTML = '<strong>Tally Endpoint Test:</strong> Checking connection to Tally server...';
+        document.getElementById('test-results').appendChild(testItem);
+        
+        try {
+          const response = await new Promise((resolve, reject) => {
+            chrome.runtime.sendMessage({
+              action: "testTallyConnection"
+            }, function(response) {
+              if (chrome.runtime.lastError) {
+                reject(chrome.runtime.lastError);
+                return;
+              }
+              resolve(response);
+            });
+          });
+          
+          if (response && response.connected) {
+            testItem.className = 'test-item test-pass';
+            testItem.innerHTML = `<strong>Tally Endpoint Test:</strong> ✅ Connected successfully! Status: ${response.serverResponse?.status}`;
+            logger.log(`Tally connection successful (Status: ${response.serverResponse?.status})`, 'success');
+            return true;
+          } else {
+            testItem.className = 'test-item test-fail';
+            testItem.innerHTML = `<strong>Tally Endpoint Test:</strong> ❌ Connection failed: ${response?.error || 'Unknown error'}`;
+            logger.log(`Tally connection failed: ${response?.error || 'Unknown error'}`, 'error');
+            return false;
+          }
+        } catch (error) {
+          testItem.className = 'test-item test-fail';
+          testItem.innerHTML = `<strong>Tally Endpoint Test:</strong> ❌ Connection test error: ${error.message}`;
+          logger.log(`Connection test error: ${error.message}`, 'error');
+          return false;
+        }
+      },
+      
+      testExtensionDetection: function() {
+        return new Promise((resolve) => {
+          logger.log('Testing extension detection...', 'info');
+          
+          const testItem = document.createElement('div');
+          testItem.className = 'test-item test-pending';
+          testItem.innerHTML = '<strong>Extension Detection Test:</strong> Checking if extension is properly detected...';
+          document.getElementById('test-results').appendChild(testItem);
+          
+          // Check if we have direct access to extension functions
+          if (typeof window.TallyAPI === 'function' || window.__tallyExtensionDetected) {
+            testItem.className = 'test-item test-pass';
+            testItem.innerHTML = '<strong>Extension Detection Test:</strong> ✅ Extension detected directly';
+            logger.log('Extension detected directly via global flags', 'success');
+            resolve(true);
+            return;
+          }
+          
+          // Try using the detect function
+          if (typeof window.detectTallyExtension === 'function') {
+            window.detectTallyExtension((detected, data) => {
+              if (detected) {
+                testItem.className = 'test-item test-pass';
+                testItem.innerHTML = '<strong>Extension Detection Test:</strong> ✅ Extension detected via detection function';
+                logger.log('Extension detected via detection function', 'success');
+                resolve(true);
+              } else {
+                testItem.className = 'test-item test-fail';
+                testItem.innerHTML = '<strong>Extension Detection Test:</strong> ❌ Extension not detected';
+                logger.log('Extension not detected - check if it\'s properly installed', 'error');
+                resolve(false);
+              }
+            }, 3000);
+          } else {
+            testItem.className = 'test-item test-fail';
+            testItem.innerHTML = '<strong>Extension Detection Test:</strong> ❌ Extension detection function not available';
+            logger.log('Extension detection function not available - extension is not injected correctly', 'error');
+            resolve(false);
+          }
+        });
+      },
+      
+      testSimpleAPICall: async function() {
+        logger.log('Testing simple Tally API call...', 'info');
+        
+        const testItem = document.createElement('div');
+        testItem.className = 'test-item test-pending';
+        testItem.innerHTML = '<strong>API Call Test:</strong> Making a simple request to Tally...';
+        document.getElementById('test-results').appendChild(testItem);
+        
+        // Simple Tally XML request
+        const sampleXml = `
+          <ENVELOPE>
+            <HEADER>
+              <VERSION>1</VERSION>
+              <TALLYREQUEST>Export</TALLYREQUEST>
+              <TYPE>Data</TYPE>
+            </HEADER>
+            <BODY>
+              <EXPORTDATA>
+                <REQUESTDESC>
+                  <REPORTNAME>List of Accounts</REPORTNAME>
+                </REQUESTDESC>
+              </EXPORTDATA>
+            </BODY>
+          </ENVELOPE>
+        `;
+        
+        try {
+          if (typeof window.TallyAPI !== 'function') {
+            testItem.className = 'test-item test-fail';
+            testItem.innerHTML = '<strong>API Call Test:</strong> ❌ TallyAPI not available - extension not working properly';
+            logger.log('TallyAPI not available - extension not working properly', 'error');
+            return false;
+          }
+          
+          const tallyApi = new window.TallyAPI();
+          const response = await tallyApi.sendRequest(sampleXml);
+          
+          testItem.className = 'test-item test-pass';
+          testItem.innerHTML = '<strong>API Call Test:</strong> ✅ API call successful!';
+          logger.log('API call successful!', 'success');
+          return true;
+        } catch (error) {
+          testItem.className = 'test-item test-fail';
+          testItem.innerHTML = `<strong>API Call Test:</strong> ❌ API call failed: ${error.message || 'Unknown error'}`;
+          logger.log(`API call failed: ${error.message || 'Unknown error'}`, 'error');
+          return false;
+        }
+      },
+      
+      // Run all tests in sequence
+      runAllTests: async function() {
+        logger.clear();
+        document.getElementById('test-results').innerHTML = '';
+        logger.log('Starting all tests...', 'info');
+        
+        const extensionDetected = await this.testExtensionDetection();
+        const tallyEndpointWorks = await this.testTallyEndpoint();
+        
+        // Only run API test if extension is detected
+        let apiCallWorks = false;
+        if (extensionDetected) {
+          apiCallWorks = await this.testSimpleAPICall();
+        } else {
+          const testItem = document.createElement('div');
+          testItem.className = 'test-item test-fail';
+          testItem.innerHTML = '<strong>API Call Test:</strong> ⚠️ Skipped - Extension not detected';
+          document.getElementById('test-results').appendChild(testItem);
+        }
+        
+        // Show summary
+        const summaryItem = document.createElement('div');
+        summaryItem.className = 'card';
+        
+        if (extensionDetected && tallyEndpointWorks && apiCallWorks) {
+          summaryItem.classList.add('success');
+          summaryItem.innerHTML = '<h3>🎉 All tests passed! The extension is working correctly.</h3>';
+        } else {
+          summaryItem.classList.add('error');
+          summaryItem.innerHTML = '<h3>⚠️ Some tests failed. Please check the logs and follow the troubleshooting steps.</h3>';
+        }
+        
+        document.getElementById('test-results').appendChild(summaryItem);
+        
+        // Show recommendations based on which tests failed
+        this.showDiagnostics(extensionDetected, tallyEndpointWorks, apiCallWorks);
+      },
+      
+      showDiagnostics: function(extensionWorks, endpointWorks, apiWorks) {
+        const diagContainer = document.getElementById('diagnostic-info');
+        diagContainer.innerHTML = '';
+        
+        const diagCard = document.createElement('div');
+        diagCard.className = 'card';
+        
+        if (!extensionWorks) {
+          diagCard.innerHTML += `
+            <h3>Extension Issues</h3>
+            <p>The extension is not being detected correctly. Try:</p>
+            <ul>
+              <li>Make sure the extension is installed and enabled in Chrome</li>
+              <li>Restart Chrome completely</li>
+              <li>Reinstall the extension</li>
+            </ul>
+          `;
+        }
+        
+        if (!endpointWorks) {
+          diagCard.innerHTML += `
+            <h3>Tally Connection Issues</h3>
+            <p>Cannot connect to Tally. Check:</p>
+            <ul>
+              <li>Is Tally running?</li>
+              <li>Is XML/HTTP interface enabled in Tally? (F12 > Advanced Configuration)</li>
+              <li>Is port 9000 blocked by your firewall?</li>
+              <li>Try restarting Tally</li>
+            </ul>
+          `;
+        }
+        
+        if (extensionWorks && endpointWorks && !apiWorks) {
+          diagCard.innerHTML += `
+            <h3>API Communication Issues</h3>
+            <p>Extension detected and Tally connection works, but API calls fail. This indicates:</p>
+            <ul>
+              <li>Possible CORS issues - ensure the extension has proper permissions</li>
+              <li>Tally might not be correctly processing the XML requests</li>
+              <li>Check if Tally is configured to accept requests from external applications</li>
+            </ul>
+          `;
+        }
+        
+        if (extensionWorks && endpointWorks && apiWorks) {
+          diagCard.innerHTML = `
+            <h3>All Systems Working</h3>
+            <p>✅ Everything appears to be working correctly!</p>
+            <p>If you're still experiencing issues in your application, check:</p>
+            <ul>
+              <li>Are you using the correct XML format for your Tally requests?</li>
+              <li>Is your application catching and handling errors properly?</li>
+              <li>Does your request need specific Tally configuration to work?</li>
+            </ul>
+          `;
+        }
+        
+        diagContainer.appendChild(diagCard);
+      }
+    };
+    
+    // Load current settings
+    function loadCurrentSettings() {
+      chrome.runtime.sendMessage({action: "getConfig"}, function(response) {
+        if (chrome.runtime.lastError) {
+          document.getElementById('current-settings').innerHTML = `
+            <div class="card error">
+              <p>❌ Error loading settings: ${chrome.runtime.lastError.message}</p>
+            </div>
+          `;
+          return;
+        }
+        
+        const config = response.config;
+        document.getElementById('current-settings').innerHTML = `
+          <ul>
+            <li><strong>Extension Enabled:</strong> ${config.enabled ? '✅ Yes' : '❌ No'}</li>
+            <li><strong>Tally Endpoint:</strong> ${config.tallyEndpoint}</li>
+            <li><strong>Extension ID:</strong> ${chrome.runtime.id}</li>
+            <li><strong>Extension Version:</strong> ${chrome.runtime.getManifest().version}</li>
+          </ul>
+        `;
+      });
+    }
+    
+    // Event listeners
+    document.addEventListener('DOMContentLoaded', function() {
+      loadCurrentSettings();
+      
+      document.getElementById('runTests').addEventListener('click', function() {
+        diagnostics.runAllTests();
+      });
+      
+      document.getElementById('testTallyEndpoint').addEventListener('click', function() {
+        diagnostics.testTallyEndpoint();
+      });
+      
+      document.getElementById('testExtensionDetection').addEventListener('click', function() {
+        diagnostics.testExtensionDetection();
+      });
+      
+      document.getElementById('testSimpleAPICall').addEventListener('click', function() {
+        diagnostics.testSimpleAPICall();
+      });
+      
+      // Log extension load
+      logger.log('Diagnostic page loaded', 'info');
+    });
+  </script>
+</body>
+</html>

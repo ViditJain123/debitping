@@ -48,7 +48,7 @@ async function checkPort(host, port) {
 
 async function sendSimpleRequest() {
   return new Promise((resolve) => {
-    const simpleXml = '<?xml version="1.0" encoding="utf-8"?><ENVELOPE><HEADER>   <VERSION>1</VERSION> <TALLYREQUEST>Export</TALLYREQUEST> <TYPE>Data</TYPE> <ID>List of Companies</ID> </HEADER> <BODY/></ENVELOPE>';
+    const simpleXml = '<?xml version="1.0" encoding="utf-8"?><ENVELOPE><HEADER>   <VERSION>1</VERSION> <TALLYREQUEST>Export</TALLYREQUEST> <TYPE>Collection</TYPE> <ID>CompanyList</ID> </HEADER> <BODY><DESC><STATICVARIABLES><SVEXPORTFORMAT>$$SysName:XML</SVEXPORTFORMAT></STATICVARIABLES><TDL><TDLMESSAGE><COLLECTION NAME="CompanyList" ISMODIFY="No"><TYPE>Company</TYPE><NATIVEMETHOD>Name</NATIVEMETHOD><NATIVEMETHOD>StartingFrom</NATIVEMETHOD></COLLECTION></TDLMESSAGE></TDL></DESC></BODY></ENVELOPE>';
     
     const options = {
       hostname: TALLY_HOST,

@@ -4,9 +4,9 @@ import {
   FaUserPlus,
   FaWhatsapp,
   FaFileInvoiceDollar,
-  FaBell,
 } from "react-icons/fa";
 import { RiSettings4Fill, RiDashboardLine } from "react-icons/ri";
+import { FiMessageSquare } from "react-icons/fi";
 import DealersClientWrapper from "../../../components/DealersClientWrapper";
 
 export default async function DealersLayout({ children }) {
@@ -61,6 +61,14 @@ export default async function DealersLayout({ children }) {
                       className="flex items-center px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md"
                     >
                       <FaWhatsapp className="mr-3" /> Send Messages
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      href="/dashboard/messages/history"
+                      className="flex items-center px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md"
+                    >
+                      <FiMessageSquare className="mr-3" /> Message History
                     </Link>
                   </li>
                 </ul>

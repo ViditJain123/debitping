@@ -1,7 +1,8 @@
 import { currentUser } from '@clerk/nextjs/server';
 import Link from 'next/link';
-import { FaArrowLeft, FaWhatsapp, FaFileInvoiceDollar, FaUserPlus, FaBell, FaCalendarCheck, FaUserCircle } from 'react-icons/fa';
+import { FaArrowLeft, FaWhatsapp, FaFileInvoiceDollar, FaUserPlus, FaCalendarCheck, FaUserCircle } from 'react-icons/fa';
 import { RiSettings4Fill, RiDashboardLine } from 'react-icons/ri';
+import { FiMessageSquare } from 'react-icons/fi';
 import FileUploaderWrapper from './FileUploaderWrapper';
 import UserProfile from '../../components/UserProfile';
 import { Suspense } from 'react';
@@ -68,6 +69,11 @@ export default async function DashboardPage() {
                 <li>
                   <Link href="/dashboard/messages" className="flex items-center px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md">
                     <FaWhatsapp className="mr-3" /> Send Messages
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/dashboard/messages/history" className="flex items-center px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md">
+                    <FiMessageSquare className="mr-3" /> Message History
                   </Link>
                 </li>
               </ul>

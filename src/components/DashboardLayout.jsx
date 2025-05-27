@@ -2,9 +2,9 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { FaArrowLeft, FaWhatsapp, FaFileInvoiceDollar, FaUserPlus, FaCalendarCheck } from 'react-icons/fa';
+import { FaArrowLeft, FaWhatsapp, FaFileInvoiceDollar, FaUserPlus, FaCalendarCheck, FaBell } from 'react-icons/fa';
 import { RiSettings4Fill, RiDashboardLine } from 'react-icons/ri';
-import { FiZap } from 'react-icons/fi';
+import { FiZap, FiMessageSquare } from 'react-icons/fi';
 
 export default function DashboardLayout({ children, title }) {
   const pathname = usePathname();
@@ -62,12 +62,24 @@ export default function DashboardLayout({ children, title }) {
                 <Link 
                   href="/dashboard/messages" 
                   className={`flex items-center px-3 py-2 rounded-md transition-colors ${
-                    pathname.includes('/dashboard/messages') 
+                    pathname === '/dashboard/messages' || (pathname.includes('/dashboard/messages') && !pathname.includes('/dashboard/messages/history'))
                       ? 'bg-primary/10 text-primary' 
                       : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                   }`}
                 >
                   <FaWhatsapp className="mr-3" /> Send Messages
+                </Link>
+              </li>
+              <li>
+                <Link 
+                  href="/dashboard/messages/history" 
+                  className={`flex items-center px-3 py-2 rounded-md transition-colors ${
+                    pathname.includes('/dashboard/messages/history') 
+                      ? 'bg-primary/10 text-primary' 
+                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                  }`}
+                >
+                  <FiMessageSquare className="mr-3" /> Message History
                 </Link>
               </li>
               <li>

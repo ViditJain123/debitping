@@ -1,11 +1,11 @@
 import { currentUser } from '@clerk/nextjs/server';
 import Link from 'next/link';
 import { FaArrowLeft } from 'react-icons/fa';
-import { FiMessageSquare } from 'react-icons/fi';
-import MessageClient from './MessageClient';
+import { FiSend } from 'react-icons/fi';
+import MessageHistory from '../MessageHistory';
 import { Suspense } from 'react';
 
-export default async function MessagesPage() {
+export default async function MessageHistoryPage() {
   // Get the current user - the middleware should already protect this route
   const user = await currentUser();
   
@@ -22,20 +22,20 @@ export default async function MessagesPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-4 gap-3">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            Send WhatsApp Messages
+            Message History
           </h1>
           <div className="flex items-center mt-2 text-sm text-gray-500 dark:text-gray-400">
             <Link href="/dashboard" className="hover:text-primary">Dashboard</Link>
             <span className="mx-2">›</span>
             <Link href="/dashboard/messages" className="hover:text-primary">Messages</Link>
             <span className="mx-2">›</span>
-            <span className="text-gray-700 dark:text-gray-300">Send</span>
+            <span className="text-gray-700 dark:text-gray-300">History</span>
           </div>
         </div>
         <div className="flex space-x-3">
-          <Link href="/dashboard/messages/history" className="flex items-center px-4 py-2 text-sm text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700">
-            <FiMessageSquare className="mr-2" />
-            View Message History
+          <Link href="/dashboard/messages" className="flex items-center px-4 py-2 text-sm text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700">
+            <FiSend className="mr-2" />
+            Send Messages
           </Link>
           <Link href="/dashboard" className="flex items-center px-4 py-2 text-sm text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700">
             <FaArrowLeft className="mr-2" />
@@ -44,8 +44,8 @@ export default async function MessagesPage() {
         </div>
       </div>
       
-      <Suspense fallback={<div className="p-4">Loading dealer data...</div>}>
-        <MessageClient />
+      <Suspense fallback={<div className="p-4">Loading message history...</div>}>
+        <MessageHistory />
       </Suspense>
     </div>
   );

@@ -6,6 +6,7 @@ import {
   FaFileInvoiceDollar,
   FaBell,
 } from "react-icons/fa";
+import { FiSend, FiMessageSquare } from "react-icons/fi";
 import { RiSettings4Fill, RiDashboardLine } from "react-icons/ri";
 import DealersClientWrapper from "../../../components/DealersClientWrapper";
 
@@ -58,9 +59,27 @@ export default async function MessagesLayout({ children }) {
                   <li>
                     <Link
                       href="/dashboard/messages"
-                      className="flex items-center px-4 py-2 text-gray-800 dark:text-white bg-gray-100 dark:bg-gray-700 rounded-md"
+                      className={`flex items-center px-4 py-2 text-gray-800 dark:text-white ${
+                        typeof window !== 'undefined' && 
+                        window.location.pathname === '/dashboard/messages' ? 
+                        'bg-gray-100 dark:bg-gray-700' : 
+                        'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                      } rounded-md`}
                     >
                       <FaWhatsapp className="mr-3" /> Send Messages
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      href="/dashboard/messages/history"
+                      className={`flex items-center px-4 py-2 text-gray-800 dark:text-white ${
+                        typeof window !== 'undefined' && 
+                        window.location.pathname === '/dashboard/messages/history' ? 
+                        'bg-gray-100 dark:bg-gray-700' : 
+                        'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                      } rounded-md`}
+                    >
+                      <FiMessageSquare className="mr-3" /> Message History
                     </Link>
                   </li>
                 </ul>
